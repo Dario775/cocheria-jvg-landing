@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    font-family: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    color-scheme: dark light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+    background-color: #0c0a09;
+    color: #f5f5f4;
+  }
+
+  html.light {
+    color-scheme: light;
+    background-color: #fbfbf9;
+    color: #1c1917;
+  }
+
+  h1, h2, h3, .font-serif-title {
+    font-family: 'Lora', Georgia, Cambria, 'Times New Roman', Times, serif;
+  }
+
+  .font-display {
+    font-family: 'Cinzel', serif;
+  }
+}
+
+/* Custom scrollbar and soft glowing candle animations */
+@keyframes flicker {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+    opacity: 0.95;
+    filter: drop-shadow(0 0 6px rgba(245, 158, 11, 0.7));
+  }
+  25% {
+    transform: scale(1.08, 0.95) translateY(-1px);
+    opacity: 0.85;
+    filter: drop-shadow(0 0 10px rgba(245, 158, 11, 0.9));
+  }
+  50% {
+    transform: scale(0.96, 1.05) translateY(-2px);
+    opacity: 1;
+    filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.8));
+  }
+  75% {
+    transform: scale(1.04, 0.98) translateY(0);
+    opacity: 0.9;
+    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.95));
+  }
+}
+
+.candle-flame {
+  animation: flicker 1.8s infinite ease-in-out alternate;
+  transform-origin: center bottom;
+}
+
+/* Accessible focus outline */
+*:focus-visible {
+  outline: 2px solid #b45309;
+  outline-offset: 2px;
+}
+

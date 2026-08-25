@@ -1,0 +1,6 @@
+{
+  "name": "Cochería J.V. González",
+  "description": "Servicios fúnebres de excelencia, obituario digital interactivo, atención de guardia 24/7, cotizador de presupuestos y acompañamiento respetuoso a las familias.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
