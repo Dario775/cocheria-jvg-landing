@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { Obituary, CondolenceMessage, MemorialTribute } from '../types';
 import { Search, Flame, MessageSquare, ChevronRight, Calendar, MapPin, Sparkles, Filter, Heart, Clock, Share2 } from 'lucide-react';
 import { ObituaryDetailModal } from './ObituaryDetailModal';
@@ -161,20 +162,25 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredObituaries.map((obit) => {
+            {filteredObituaries.map((obit, index) => {
               const isEnVelacion = obit.status === 'en_velacion';
               return (
-                <div
+                <motion.div
                   key={obit.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.45, delay: index * 0.07, ease: 'easeOut' }}
+                  whileHover={{ y: -5, transition: { duration: 0.2 } }}
                   onClick={() => setSelectedObituary(obit)}
-                  className={`group relative rounded-2xl border transition-all duration-300 hover:shadow-xl cursor-pointer overflow-hidden flex flex-col justify-between ${
+                  className={`group relative rounded-2xl border transition-all duration-300 hover:shadow-2xl cursor-pointer overflow-hidden flex flex-col justify-between ${
                     isDark
                       ? isEnVelacion
-                        ? 'bg-stone-850 border-amber-600/60 hover:border-amber-400 ring-1 ring-amber-600/20'
-                        : 'bg-stone-850 border-stone-800 hover:border-stone-700'
+                        ? 'bg-stone-850/95 border-amber-600/60 hover:border-amber-400 ring-1 ring-amber-600/20 shadow-amber-950/20'
+                        : 'bg-stone-850/90 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
                       : isEnVelacion
-                        ? 'bg-white border-amber-400 hover:border-amber-500 ring-1 ring-amber-400/40 shadow-sm'
-                        : 'bg-white border-stone-200 hover:border-stone-300 shadow-xs'
+                        ? 'bg-white border-amber-400 hover:border-amber-500 ring-1 ring-amber-400/40 shadow-md'
+                        : 'bg-white border-stone-200 hover:border-amber-400/50 shadow-xs'
                   }`}
                 >
                   {/* Top Bar Status */}
@@ -272,7 +278,7 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
                     </span>
                   </div>
 
-                </div>
+                </motion.div>
               );
             })}
           </div>

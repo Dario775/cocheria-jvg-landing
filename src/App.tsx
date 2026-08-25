@@ -14,6 +14,7 @@ import { LocationAndContact } from './components/LocationAndContact';
 import { Footer } from './components/Footer';
 import { FloatingEmergencyButton } from './components/FloatingEmergencyButton';
 import { BereavementGuideModal } from './components/BereavementGuideModal';
+import { ParallaxQuoteSection } from './components/effects/ParallaxQuoteSection';
 import { useTheme } from './context/ThemeContext';
 
 export default function App() {
@@ -193,6 +194,8 @@ export default function App() {
         <RegionalBranchesSection onContactClick={handleNavigate} />
 
         <ServicesSection />
+
+        <ParallaxQuoteSection />
 
         <DigitalObituary
           obituaries={obituaries}

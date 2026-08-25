@@ -1,8 +1,10 @@
-import React from 'react';
-import { Phone, MessageCircle, Heart, Search, Calculator, ShieldCheck, Clock, Award, ChevronRight, FileText, Building2, MapPin } from 'lucide-react';
-import { EMERGENCY_INFO, GROUP_BRANCHES } from '../data/mockData';
-import { EmblemIcon, LogoJVGonzalez, UnifiedCompanyLogo } from './logos/CompanyLogos';
+import React, { useRef } from 'react';
+import { motion, useScroll, useTransform } from 'motion/react';
+import { Phone, MessageCircle, Search, Calculator, ShieldCheck, Clock, Award, ChevronRight, FileText, Building2, Sparkles } from 'lucide-react';
+import { EMERGENCY_INFO } from '../data/mockData';
+import { UnifiedCompanyLogo } from './logos/CompanyLogos';
 import { useTheme } from '../context/ThemeContext';
+import { FloatingCandleEmbers } from './effects/FloatingCandleEmbers';
 
 interface HeroProps {
   onNavigate: (sectionId: string) => void;
@@ -11,16 +13,34 @@ interface HeroProps {
 
 export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }) => {
   const { isDark } = useTheme();
+  const heroRef = useRef<HTMLDivElement | null>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ['start start', 'end start']
+  });
+
+  const bgBlobY = useTransform(scrollYProgress, [0, 1], ['0%', '35%']);
+  const heroContentY = useTransform(scrollYProgress, [0, 1], ['0px', '25px']);
+  const cardFloatY = useTransform(scrollYProgress, [0, 1], ['0px', '-20px']);
 
   return (
-    <section className={`relative overflow-hidden ${
-      isDark ? 'bg-stone-950 text-stone-100 border-stone-800' : 'bg-stone-100/70 text-stone-900 border-stone-200'
-    } pt-12 pb-16 sm:pt-16 sm:pb-24 border-b transition-colors duration-300`}>
-      
-      {/* Subtle Background Pattern & Ambient Serene Lighting */}
-      <div className="absolute inset-0 opacity-20 pointer-events-none">
-        <div className={`absolute -top-40 -left-40 w-96 h-96 rounded-full ${isDark ? 'bg-sky-600/20' : 'bg-sky-400/20'} blur-3xl`} />
-        <div className={`absolute top-1/2 -right-40 w-96 h-96 rounded-full ${isDark ? 'bg-amber-600/15' : 'bg-amber-500/10'} blur-3xl`} />
+    <section 
+      ref={heroRef}
+      className={`relative overflow-hidden ${
+        isDark ? 'bg-stone-950 text-stone-100 border-stone-800' : 'bg-stone-100/80 text-stone-900 border-stone-200'
+      } pt-10 pb-16 sm:pt-14 sm:pb-24 border-b transition-colors duration-300`}
+    >
+      {/* Dynamic Floating Candle Embers & Ambient Serene Lighting */}
+      <FloatingCandleEmbers />
+
+      {/* Parallax Glowing Light Blobs */}
+      <motion.div 
+        style={{ y: bgBlobY }}
+        className="absolute inset-0 opacity-25 pointer-events-none"
+      >
+        <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full ${isDark ? 'bg-sky-600/30' : 'bg-sky-400/20'} blur-3xl`} />
+        <div className={`absolute top-1/3 -right-32 w-96 h-96 rounded-full ${isDark ? 'bg-amber-600/20' : 'bg-amber-500/15'} blur-3xl`} />
         <div 
           className="w-full h-full opacity-10"
           style={{
@@ -31,12 +51,17 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
             backgroundPosition: '0 0, 15px 15px'
           }}
         />
-      </div>
+      </motion.div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         
         {/* Top 3-Branch Network Trust Bar */}
-        <div className="mb-8 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white/70 dark:bg-stone-900/70 border border-stone-200 dark:border-stone-800 backdrop-blur-md">
+        <motion.div 
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="mb-8 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white/75 dark:bg-stone-900/75 border border-stone-200 dark:border-stone-800 backdrop-blur-md shadow-xs"
+        >
           <div className="flex items-center gap-2 text-xs font-semibold text-stone-700 dark:text-stone-300">
             <Building2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
             <span className="hidden sm:inline">Red Regional Unificada de Sepelios y Servicios Sociales:</span>
@@ -46,7 +71,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-sky-50 dark:hover:bg-sky-950/50 text-[11px] font-medium transition-colors border border-stone-200 dark:border-stone-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-sky-50 dark:hover:bg-sky-950/50 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
             >
               <UnifiedCompanyLogo brand="jv_gonzalez" variant="emblem" size="xs" />
               <span className="font-bold text-sky-800 dark:text-sky-300">J.V. González</span>
@@ -54,7 +79,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
 
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-[11px] font-medium transition-colors border border-stone-200 dark:border-stone-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
             >
               <UnifiedCompanyLogo brand="guemes" variant="emblem" size="xs" />
               <span className="font-bold text-stone-800 dark:text-stone-200">Gral. Güemes</span>
@@ -62,23 +87,30 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
 
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-medium transition-colors border border-stone-200 dark:border-stone-700"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
             >
               <UnifiedCompanyLogo brand="metan" variant="emblem" size="xs" />
               <span className="font-bold text-rose-800 dark:text-rose-300">Metán</span>
             </button>
           </div>
-        </div>
+        </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-8 items-center">
           
-          {/* Main Hero Copy & Authority */}
-          <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
-            <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full ${
+          {/* Main Hero Copy & Authority with Motion Reveal */}
+          <motion.div 
+            style={{ y: heroContentY }}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            className="lg:col-span-7 space-y-6 text-center lg:text-left"
+          >
+            <div className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full ${
               isDark ? 'bg-amber-950/60 border-amber-800/60 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-900'
-            } border text-xs sm:text-sm font-medium`}>
+            } border text-xs sm:text-sm font-medium shadow-xs`}>
               <ShieldCheck className="w-4 h-4 text-amber-600" />
               <span>Empresa Líder de Servicios Fúnebres en Anta y la Región</span>
+              <Sparkles className="w-3.5 h-3.5 text-amber-500 hidden sm:inline animate-pulse" />
             </div>
 
             <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-5xl font-bold tracking-tight ${
@@ -95,9 +127,9 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5">
               <a
                 href={`tel:${EMERGENCY_INFO.phoneEmergencyMobile.replace(/\s+/g, '')}`}
-                className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-amber-700 hover:bg-amber-600 text-stone-50 font-semibold px-6 py-3.5 rounded-xl text-sm sm:text-base shadow-lg hover:shadow-amber-900/40 transition-all border border-amber-500/30 group"
+                className="w-full sm:w-auto flex items-center justify-center gap-2.5 bg-gradient-to-r from-amber-700 via-amber-800 to-amber-900 hover:from-amber-600 hover:to-amber-800 text-stone-50 font-semibold px-6 py-3.5 rounded-xl text-sm sm:text-base shadow-lg hover:shadow-amber-900/40 transition-all duration-300 border border-amber-500/30 group hover:scale-[1.02]"
               >
-                <Phone className="w-5 h-5 text-amber-200 group-hover:animate-pulse" />
+                <Phone className="w-5 h-5 text-amber-200 group-hover:animate-bounce" />
                 <span>Guardia 24hs: {EMERGENCY_INFO.phoneEmergencyMobile}</span>
               </a>
 
@@ -105,9 +137,9 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
                 onClick={() => onNavigate('obituario')}
                 className={`w-full sm:w-auto flex items-center justify-center gap-2 ${
                   isDark 
-                    ? 'bg-stone-850 hover:bg-stone-800 text-stone-200 hover:text-white border-stone-700' 
-                    : 'bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border-stone-300 shadow-sm'
-                } font-medium px-5 py-3.5 rounded-xl text-sm sm:text-base border transition-all`}
+                    ? 'bg-stone-900 hover:bg-stone-850 text-stone-200 hover:text-white border-stone-700' 
+                    : 'bg-white hover:bg-stone-50 text-stone-800 hover:text-stone-950 border-stone-300 shadow-xs'
+                } font-medium px-5 py-3.5 rounded-xl text-sm sm:text-base border transition-all duration-200 hover:scale-[1.02]`}
               >
                 <Search className="w-4 h-4 text-amber-600" />
                 <span>Consultar Obituario Digital</span>
@@ -129,16 +161,22 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
                 <span>Más de 40 años de trayectoria</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          {/* Quick Interactive Access Card on the Right */}
-          <div className="lg:col-span-5">
+          {/* Quick Interactive Access Card on the Right with Parallax Float */}
+          <motion.div 
+            style={{ y: cardFloatY }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+            className="lg:col-span-5"
+          >
             <div className={`${
               isDark 
                 ? 'bg-stone-900/90 border-stone-800 text-stone-100' 
-                : 'bg-white border-stone-200 text-stone-900 shadow-xl'
-            } border rounded-2xl p-6 sm:p-7 shadow-2xl backdrop-blur-sm relative overflow-hidden transition-colors duration-200`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-600/10 rounded-full blur-2xl pointer-events-none" />
+                : 'bg-white/95 border-stone-200 text-stone-900 shadow-xl'
+            } border rounded-2xl p-6 sm:p-7 shadow-2xl backdrop-blur-md relative overflow-hidden transition-colors duration-200 hover:border-amber-500/40`}>
+              <div className="absolute top-0 right-0 w-36 h-36 bg-amber-600/10 rounded-full blur-2xl pointer-events-none" />
 
               <div className={`flex items-center justify-between pb-4 border-b ${isDark ? 'border-stone-800' : 'border-stone-200'}`}>
                 <div>
@@ -236,11 +274,10 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
               </div>
 
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
     </section>
   );
 };
-

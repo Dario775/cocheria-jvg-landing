@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { motion } from 'motion/react';
 import { FUNERAL_SERVICES } from '../data/mockData';
 import { FuneralServiceItem } from '../types';
-import { Shield, Home, Flame, Truck, FileText, Flower2, HeartHandshake, CheckCircle2, ChevronRight, X, Phone, MessageCircle } from 'lucide-react';
+import { Shield, Home, Flame, Truck, FileText, Flower2, HeartHandshake, CheckCircle2, ChevronRight, X, Phone, MessageCircle, Sparkles } from 'lucide-react';
 import { EMERGENCY_INFO } from '../data/mockData';
 import { useTheme } from '../context/ThemeContext';
 
@@ -43,20 +44,25 @@ export const ServicesSection: React.FC = () => {
 
         {/* Services Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {FUNERAL_SERVICES.map((service) => {
+          {FUNERAL_SERVICES.map((service, index) => {
             const IconComponent = iconMap[service.icon] || Shield;
             return (
-              <div
+              <motion.div
                 key={service.id}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-50px' }}
+                transition={{ duration: 0.5, delay: index * 0.08, ease: 'easeOut' }}
+                whileHover={{ y: -6, transition: { duration: 0.2 } }}
                 onClick={() => setSelectedService(service)}
-                className={`group relative rounded-2xl p-6 border transition-all duration-300 hover:shadow-xl cursor-pointer flex flex-col justify-between ${
+                className={`group relative rounded-2xl p-6 border transition-all duration-300 hover:shadow-2xl cursor-pointer flex flex-col justify-between ${
                   isDark
                     ? service.highlighted
-                      ? 'border-amber-600/60 bg-gradient-to-b from-stone-850 to-stone-900 ring-1 ring-amber-500/20'
-                      : 'bg-stone-850 border-stone-800 hover:border-stone-700'
+                      ? 'border-amber-600/60 bg-gradient-to-b from-stone-850 to-stone-900 ring-1 ring-amber-500/20 shadow-amber-950/20'
+                      : 'bg-stone-850/90 border-stone-800 hover:border-amber-500/40 hover:bg-stone-850'
                     : service.highlighted
-                      ? 'border-amber-400 bg-amber-50/50 ring-1 ring-amber-400/40 shadow-sm'
-                      : 'bg-stone-50 border-stone-200 hover:border-stone-300 shadow-xs'
+                      ? 'border-amber-400 bg-amber-50/60 ring-1 ring-amber-400/40 shadow-md'
+                      : 'bg-white border-stone-200 hover:border-amber-400/60 hover:shadow-lg'
                 }`}
               >
                 <div>
@@ -64,7 +70,7 @@ export const ServicesSection: React.FC = () => {
                   <div className="flex items-start justify-between mb-4">
                     <div className={`w-12 h-12 rounded-xl ${
                       isDark ? 'bg-amber-950/80 border-amber-700/50 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-900'
-                    } border flex items-center justify-center group-hover:scale-105 transition-transform`}>
+                    } border flex items-center justify-center group-hover:scale-110 transition-transform`}>
                       <IconComponent className="w-6 h-6" />
                     </div>
                     {service.pricingIndication && (
@@ -103,9 +109,9 @@ export const ServicesSection: React.FC = () => {
                   isDark ? 'border-stone-800 text-amber-400 group-hover:text-amber-300' : 'border-stone-200 text-amber-800 group-hover:text-amber-900'
                 } flex items-center justify-between text-xs font-semibold`}>
                   <span>Conocer más detalles</span>
-                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform" />
                 </div>
-              </div>
+              </motion.div>
             );
           })}
         </div>
