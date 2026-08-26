@@ -243,19 +243,33 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
 
         </div>
 
-        {/* Bottom copyright & back to top */}
-        <div className="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-stone-500">
-          <p>
-            © {new Date().getFullYear()} Cochería J.V. González. Todos los derechos reservados. Servicios Fúnebres y Sepelios.
+        {/* Bottom copyright (left), Neurocortex dev credit (center) & back to top (right) */}
+        <div className="pt-8 border-t border-stone-850 grid grid-cols-1 md:grid-cols-3 items-center gap-4 text-xs text-stone-500">
+          <p className="text-center md:text-left">
+            © {new Date().getFullYear()} Cochería J.V. González. Todos los derechos reservados.
           </p>
 
-          <button
-            onClick={scrollToTop}
-            className="flex items-center gap-1.5 text-stone-400 hover:text-amber-300 transition-colors"
-          >
-            <span>Volver arriba</span>
-            <ArrowUp className="w-3.5 h-3.5" />
-          </button>
+          <p className="text-center">
+            Desarrollado por{' '}
+            <a
+              href="https://www.neurocortex.com.ar"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-stone-400 hover:text-stone-200 transition-colors underline-offset-2 hover:underline font-medium"
+            >
+              Neurocortex
+            </a>
+          </p>
+
+          <div className="flex justify-center md:justify-end">
+            <button
+              onClick={scrollToTop}
+              className="flex items-center gap-1.5 text-stone-400 hover:text-amber-300 transition-colors py-1 text-xs"
+            >
+              <span>Volver arriba</span>
+              <ArrowUp className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
 
       </div>

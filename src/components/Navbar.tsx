@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, MessageCircle, MapPin, Menu, X, Sun, Moon, Building2, ChevronDown, LogIn } from 'lucide-react';
-import { EMERGENCY_INFO, GROUP_BRANCHES } from '../data/mockData';
-import { EmblemIcon, LogoJVGonzalez, UnifiedCompanyLogo } from './logos/CompanyLogos';
+import { Phone, MessageCircle, MapPin, Menu, X, Sun, Moon, Flame } from 'lucide-react';
+import { EMERGENCY_INFO } from '../data/mockData';
+import { EmblemIcon } from './logos/CompanyLogos';
 import { useTheme } from '../context/ThemeContext';
 
 interface NavbarProps {
@@ -19,14 +19,13 @@ export const Navbar: React.FC<NavbarProps> = ({
   onChangeFontSize,
   activeObituariesCount
 }) => {
-  const { theme, isDark, toggleTheme } = useTheme();
+  const { isDark, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [branchDropdownOpen, setBranchDropdownOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 30);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -34,11 +33,11 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
-    { id: 'sucursales', label: 'Sedes Regionales' },
+    { id: 'sucursales', label: 'Sedes' },
     { id: 'servicios', label: 'Servicios' },
     { 
       id: 'obituario', 
-      label: 'Obituario Digital',
+      label: 'Obituario',
       badge: activeObituariesCount > 0 ? `${activeObituariesCount} en sala` : undefined
     },
     { id: 'galeria', label: 'Instalaciones' },
@@ -50,40 +49,45 @@ export const Navbar: React.FC<NavbarProps> = ({
   const handleNavClick = (id: string) => {
     onNavigate(id);
     setMobileMenuOpen(false);
-    setBranchDropdownOpen(false);
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full transition-all duration-300">
-      {/* Top Emergency Topbar */}
-      <div className={`${isDark ? 'bg-stone-900 text-stone-300 border-stone-800' : 'bg-stone-100 text-stone-700 border-stone-250'} text-xs sm:text-sm border-b py-1.5 px-4 sm:px-6 transition-colors duration-200`}>
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Emergency 24/7 Status Indicator */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <div className={`flex items-center gap-1.5 ${isDark ? 'bg-amber-950/70 border-amber-800/60 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-900'} border font-medium px-2.5 py-0.5 rounded-full text-xs`}>
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
+    <header className="sticky top-0 z-50 w-full select-none transition-all duration-300">
+      
+      {/* ── TOP UTILITY BAR (Modern, High Contrast & Very Readable) ── */}
+      <div className={`${
+        isDark 
+          ? 'bg-stone-950 text-stone-200 border-stone-850' 
+          : 'bg-stone-900 text-stone-100 border-stone-800'
+      } border-b py-2 px-4 sm:px-8 text-xs sm:text-sm font-sans transition-colors duration-200 shadow-sm`}>
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          
+          {/* Left: 24/7 Status Badge & Regional Presence */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold px-3 py-1 rounded-full text-xs shadow-xs">
+              <span className="relative flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400"></span>
               </span>
-              Guardia 24/7 Permanente
+              <span>Guardia 24hs Permanente</span>
             </div>
-            <span className={`hidden md:inline-flex items-center gap-1 ${isDark ? 'text-stone-400' : 'text-stone-600'}`}>
-              <MapPin className="w-3.5 h-3.5 text-amber-600" />
-              Joaquín V. González, Salta
-            </span>
+
+            <div className="hidden md:flex items-center gap-1.5 text-stone-300 text-xs font-medium">
+              <MapPin className="w-3.5 h-3.5 text-amber-400" />
+              <span>Sedes: J.V. González • Gral. Güemes • San José de Metán</span>
+            </div>
           </div>
 
-          {/* Quick Contact & Accessibility tools */}
-          <div className="flex items-center gap-2.5 sm:gap-4">
-            {/* Font size selector for accessibility */}
-            <div className={`hidden sm:flex items-center gap-1 ${isDark ? 'bg-stone-800/80 text-stone-300 border-stone-700' : 'bg-stone-200/80 text-stone-800 border-stone-300'} px-2 py-0.5 rounded text-xs border`}>
-              <span className={`${isDark ? 'text-stone-400' : 'text-stone-600'} mr-1 text-[11px]`}>Texto:</span>
+          {/* Right: Direct Contacts, Font Sizer & Theme Toggle */}
+          <div className="flex items-center gap-3 sm:gap-5">
+            
+            {/* Font Size Accessibility Pill */}
+            <div className="hidden lg:flex items-center gap-1 bg-stone-800/90 px-2.5 py-1 rounded-lg border border-stone-700 text-xs font-semibold">
+              <span className="text-stone-400 mr-1">Fuente:</span>
               <button
                 onClick={() => onChangeFontSize('normal')}
-                className={`px-1.5 py-0.5 rounded font-semibold transition-colors ${
-                  fontSize === 'normal' 
-                    ? isDark ? 'bg-stone-600 text-white' : 'bg-white text-stone-900 shadow-xs' 
-                    : isDark ? 'hover:text-white' : 'hover:text-stone-950'
+                className={`px-2 py-0.5 rounded transition-all ${
+                  fontSize === 'normal' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white'
                 }`}
                 title="Tamaño normal"
               >
@@ -91,38 +95,20 @@ export const Navbar: React.FC<NavbarProps> = ({
               </button>
               <button
                 onClick={() => onChangeFontSize('large')}
-                className={`px-1.5 py-0.5 rounded font-bold text-sm transition-colors ${
-                  fontSize === 'large' 
-                    ? isDark ? 'bg-stone-600 text-white' : 'bg-white text-stone-900 shadow-xs' 
-                    : isDark ? 'hover:text-white' : 'hover:text-stone-950'
+                className={`px-2 py-0.5 rounded transition-all ${
+                  fontSize === 'large' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white'
                 }`}
                 title="Tamaño grande"
               >
                 A+
               </button>
-              <button
-                onClick={() => onChangeFontSize('xlarge')}
-                className={`px-1.5 py-0.5 rounded font-extrabold text-base transition-colors ${
-                  fontSize === 'xlarge' 
-                    ? isDark ? 'bg-stone-600 text-white' : 'bg-white text-stone-900 shadow-xs' 
-                    : isDark ? 'hover:text-white' : 'hover:text-stone-950'
-                }`}
-                title="Tamaño extra grande"
-              >
-                A++
-              </button>
             </div>
 
-            {/* Theme Toggle Button */}
+            {/* Dark / Light Mode Button */}
             <button
               onClick={toggleTheme}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                isDark 
-                  ? 'bg-stone-800 hover:bg-stone-700 text-amber-300 border border-stone-700' 
-                  : 'bg-white hover:bg-stone-100 text-amber-900 border border-stone-300 shadow-xs'
-              }`}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-stone-800 hover:bg-stone-750 text-amber-300 border border-stone-700 transition-all hover:scale-105"
               title={isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
-              aria-label="Alternar modo claro y oscuro"
             >
               {isDark ? (
                 <>
@@ -131,259 +117,191 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </>
               ) : (
                 <>
-                  <Moon className="w-3.5 h-3.5 text-amber-800" />
+                  <Moon className="w-3.5 h-3.5 text-amber-300" />
                   <span className="hidden sm:inline">Modo Oscuro</span>
                 </>
               )}
             </button>
 
-            {/* Direct Phone */}
+            {/* Phone Direct Link */}
             <a
               href={`tel:${EMERGENCY_INFO.phoneGuard24.replace(/\s+/g, '')}`}
-              className={`flex items-center gap-1.5 ${isDark ? 'text-amber-300 hover:text-amber-200' : 'text-amber-800 hover:text-amber-900'} font-semibold transition-colors`}
+              className="flex items-center gap-1.5 text-stone-100 hover:text-amber-300 font-bold transition-colors text-xs sm:text-sm font-mono"
             >
-              <Phone className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Guardia: {EMERGENCY_INFO.phoneGuard24}</span>
-              <span className="sm:hidden">{EMERGENCY_INFO.phoneGuard24}</span>
+              <Phone className="w-3.5 h-3.5 text-amber-400" />
+              <span>{EMERGENCY_INFO.phoneGuard24}</span>
             </a>
 
-            {/* WhatsApp link */}
+            {/* WhatsApp Urgent Direct Link */}
             <a
               href={EMERGENCY_INFO.whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden lg:flex items-center gap-1.5 bg-emerald-800 hover:bg-emerald-700 text-white px-2.5 py-0.5 rounded-full font-medium transition-colors"
+              className="hidden sm:flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg transition-all text-xs shadow-sm hover:scale-105"
             >
-              <MessageCircle className="w-3.5 h-3.5 text-emerald-200" />
-              <span>WhatsApp Urgente</span>
+              <MessageCircle className="w-3.5 h-3.5" />
+              <span>WhatsApp Urgencias</span>
             </a>
           </div>
+
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
+      {/* ── MAIN NAVBAR (Contemporary, Glassmorphic & Bold Luxury) ── */}
       <nav className={`${
         isDark 
-          ? 'bg-stone-950/95 text-stone-100 border-stone-800' 
-          : 'bg-white/95 text-stone-900 border-stone-200'
-      } backdrop-blur-md border-b transition-all ${isScrolled ? 'shadow-lg py-2.5' : 'py-3'}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-          {/* Brand Logo */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => handleNavClick('inicio')}
-              className="flex items-center gap-2.5 sm:gap-3 text-left group focus:outline-none"
-            >
-              <div className="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 flex items-center justify-center transition-transform group-hover:scale-105">
-                <EmblemIcon primaryColor="#1B4D75" className="w-10 h-10 sm:w-11 sm:h-11 drop-shadow" />
-              </div>
-              <div>
-                <span className="block text-[9px] sm:text-[10px] tracking-[0.28em] font-serif italic font-semibold text-sky-800 dark:text-sky-400 uppercase">
-                  C O C H E R Í A
-                </span>
-                <span className={`block font-serif text-base sm:text-xl font-black tracking-wide leading-none ${
-                  isDark ? 'text-stone-100 group-hover:text-amber-200' : 'text-sky-950 group-hover:text-amber-900'
-                } transition-colors`}>
-                  J.V. GONZALEZ
-                </span>
-                <span className={`block text-[9px] tracking-wider ${isDark ? 'text-stone-400' : 'text-stone-500'} uppercase font-light mt-0.5`}>
-                  Sepelios • Dpto. Anta, Salta
-                </span>
-              </div>
-            </button>
-          </div>
+          ? isScrolled ? 'bg-stone-950/95 border-stone-850 shadow-2xl shadow-black/60' : 'bg-stone-950/90 border-stone-900' 
+          : isScrolled ? 'bg-white/95 border-stone-200 shadow-xl shadow-stone-900/10' : 'bg-white/90 border-stone-200'
+      } backdrop-blur-xl border-b transition-all duration-300 ${isScrolled ? 'py-3' : 'py-4'}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          
+          {/* Main Brand Logo - Bold, Modern & Impressive */}
+          <button
+            onClick={() => handleNavClick('inicio')}
+            className="flex items-center gap-3 sm:gap-3.5 text-left group focus:outline-none flex-shrink-0"
+          >
+            <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-amber-600/25 via-amber-500/10 to-transparent border-2 border-amber-600/40 flex items-center justify-center transition-transform group-hover:scale-105 shadow-md">
+              <EmblemIcon primaryColor="#D97706" className="w-8 h-8 sm:w-9 sm:h-9 drop-shadow" />
+            </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden xl:flex items-center gap-1">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-brand-title text-lg sm:text-2xl font-black tracking-tight leading-none text-stone-900 dark:text-stone-50 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                  COCHERA J.V. GONZÁLEZ
+                </span>
+              </div>
+              <span className="block text-xs font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mt-1">
+                Servicios Sociales & Fúnebres
+              </span>
+            </div>
+          </button>
+
+          {/* Desktop Navigation Links - Comfortable font size & smooth pill highlight */}
+          <div className="hidden xl:flex items-center gap-1.5">
             {navItems.map((item) => {
               const isActive = activeSection === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => handleNavClick(item.id)}
-                  className={`relative px-3 py-1.5 text-xs lg:text-sm font-medium rounded-md transition-all duration-200 ${
+                  className={`relative px-3.5 py-2 text-sm font-semibold rounded-xl transition-all duration-200 flex items-center gap-2 ${
                     isActive
                       ? isDark 
-                        ? 'text-amber-200 bg-stone-800/90 shadow-sm' 
-                        : 'text-amber-900 bg-amber-100/70 font-semibold shadow-xs'
+                        ? 'text-amber-300 bg-amber-950/60 border border-amber-600/50 shadow-md shadow-amber-950/40' 
+                        : 'text-amber-950 bg-amber-100 border border-amber-400 shadow-sm'
                       : isDark
-                        ? 'text-stone-300 hover:text-white hover:bg-stone-850'
-                        : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100'
+                        ? 'text-stone-300 hover:text-white hover:bg-stone-900 border border-transparent'
+                        : 'text-stone-700 hover:text-stone-950 hover:bg-stone-100 border border-transparent'
                   }`}
                 >
-                  <span className="flex items-center gap-1.5">
-                    {item.label}
-                    {item.badge && (
-                      <span className={`${
-                        isDark ? 'bg-amber-600/90 text-stone-950' : 'bg-amber-700 text-white'
-                      } font-bold text-[10px] px-1.5 py-0.2 rounded-full animate-pulse`}>
-                        {item.badge}
-                      </span>
-                    )}
-                  </span>
-                  {isActive && (
-                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-amber-500 rounded-full" />
+                  <span>{item.label}</span>
+                  {item.badge && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-bold rounded-full bg-red-600 text-white shadow-xs animate-pulse">
+                      <Flame className="w-3 h-3" />
+                      <span>{item.badge}</span>
+                    </span>
                   )}
                 </button>
               );
             })}
           </div>
 
-          {/* Direct Emergency Call Button & CRM Access */}
-          <div className="hidden md:flex items-center gap-2.5">
-            <a
-              href={import.meta.env.VITE_CRM_URL || 'http://localhost:3000'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-medium border transition-all ${
-                isDark 
-                  ? 'bg-stone-900 hover:bg-stone-800 text-amber-300 border-stone-700 hover:border-amber-500/60 shadow-xs' 
-                  : 'bg-stone-100 hover:bg-stone-200 text-amber-950 border-stone-300 shadow-xs'
-              }`}
-              title="Acceso al Sistema CRM y Gestión de Afiliados"
-            >
-              <LogIn className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span>Acceso CRM</span>
-            </a>
-
+          {/* Right Action Button: 24hs Urgencia */}
+          <div className="hidden lg:flex items-center gap-3">
             <a
               href={`tel:${EMERGENCY_INFO.phoneEmergencyMobile.replace(/\s+/g, '')}`}
-              className="flex items-center gap-2 bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-stone-50 font-semibold px-4 py-2 rounded-lg text-xs sm:text-sm shadow-md hover:shadow-amber-900/30 transition-all border border-amber-600/40"
+              className="flex items-center gap-2.5 bg-gradient-to-r from-amber-700 via-amber-600 to-amber-700 hover:from-amber-600 hover:to-amber-500 text-white font-bold px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-amber-900/30 transition-all border border-amber-500/40 hover:scale-105"
             >
-              <Phone className="w-4 h-4 animate-bounce text-amber-200" />
-              <span>Asistencia Inmediata</span>
+              <Phone className="w-4 h-4 animate-bounce" />
+              <span>Guardia 24hs</span>
             </a>
           </div>
 
-          {/* Mobile Menu & Theme Toggle */}
-          <div className="flex xl:hidden items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className={`p-2 rounded-lg ${
-                isDark ? 'bg-stone-800 text-amber-300' : 'bg-stone-100 text-amber-800 border border-stone-200'
-              }`}
-              title={isDark ? 'Modo Claro' : 'Modo Oscuro'}
-              aria-label="Alternar modo de color"
-            >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </button>
+          {/* Mobile Menu & Direct Call Toggle */}
+          <div className="flex xl:hidden items-center gap-2.5">
             <a
               href={`tel:${EMERGENCY_INFO.phoneEmergencyMobile.replace(/\s+/g, '')}`}
-              className="p-2 bg-amber-700 hover:bg-amber-600 text-stone-50 rounded-lg"
-              title="Llamar a la guardia"
+              className="p-2.5 bg-amber-700 hover:bg-amber-600 text-white rounded-xl shadow-md"
+              title="Llamada de urgencia 24hs"
             >
-              <Phone className="w-4 h-4" />
+              <Phone className="w-5 h-5" />
             </a>
+
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`p-2 rounded-lg focus:outline-none ${
+              className={`p-2.5 rounded-xl focus:outline-none transition-all ${
                 isDark 
-                  ? 'text-stone-300 hover:text-white bg-stone-800 hover:bg-stone-700' 
-                  : 'text-stone-700 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 border border-stone-200'
+                  ? 'text-stone-200 hover:text-white bg-stone-900 border border-stone-800' 
+                  : 'text-stone-800 hover:text-stone-950 bg-stone-100 border border-stone-300'
               }`}
               aria-label="Abrir menú de navegación"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
+
         </div>
 
-        {/* Mobile Dropdown Menu */}
+        {/* Mobile Slide-down Drawer Menu */}
         {mobileMenuOpen && (
           <div className={`xl:hidden ${
-            isDark ? 'bg-stone-900 border-stone-800' : 'bg-white border-stone-200'
-          } border-b px-4 pt-3 pb-6 space-y-3 shadow-2xl animate-in slide-in-from-top duration-200`}>
+            isDark ? 'bg-stone-950 border-stone-850' : 'bg-white border-stone-200'
+          } border-b px-4 pt-4 pb-6 space-y-4 shadow-2xl animate-in slide-in-from-top-3 duration-200`}>
             
-            {/* Theme and Font size controls for mobile */}
-            <div className={`flex justify-between items-center ${isDark ? 'bg-stone-800/80' : 'bg-stone-100'} p-2.5 rounded-lg`}>
-              <span className={`text-xs ${isDark ? 'text-stone-300' : 'text-stone-700'}`}>Tema y Accesibilidad:</span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleTheme}
-                  className={`px-2.5 py-1 text-xs rounded-md font-medium flex items-center gap-1 ${
-                    isDark ? 'bg-stone-700 text-amber-300' : 'bg-white text-amber-900 border border-stone-300'
-                  }`}
-                >
-                  {isDark ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-                  <span>{isDark ? 'Claro' : 'Oscuro'}</span>
-                </button>
-                <div className="flex gap-1">
+            {/* Quick Links Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {navItems.map((item) => {
+                const isActive = activeSection === item.id;
+                return (
                   <button
-                    onClick={() => onChangeFontSize('normal')}
-                    className={`px-2 py-0.5 text-xs rounded ${fontSize === 'normal' ? 'bg-amber-700 text-white font-bold' : isDark ? 'bg-stone-700 text-stone-200' : 'bg-stone-200 text-stone-800'}`}
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`flex items-center justify-between p-3 rounded-xl text-sm font-bold text-left transition-all ${
+                      isActive
+                        ? isDark 
+                          ? 'bg-amber-950/80 text-amber-300 border border-amber-600/60 shadow-xs' 
+                          : 'bg-amber-100 text-amber-950 border border-amber-400 shadow-xs'
+                        : isDark
+                          ? 'bg-stone-900 text-stone-300 hover:bg-stone-850 border border-stone-800'
+                          : 'bg-stone-50 text-stone-800 hover:bg-stone-100 border border-stone-200'
+                    }`}
                   >
-                    A
+                    <span>{item.label}</span>
+                    {item.badge && (
+                      <span className="px-2 py-0.5 rounded-full text-xs font-extrabold bg-red-600 text-white">
+                        {item.badge}
+                      </span>
+                    )}
                   </button>
-                  <button
-                    onClick={() => onChangeFontSize('large')}
-                    className={`px-2 py-0.5 text-xs rounded ${fontSize === 'large' ? 'bg-amber-700 text-white font-bold' : isDark ? 'bg-stone-700 text-stone-200' : 'bg-stone-200 text-stone-800'}`}
-                  >
-                    A+
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 gap-1">
-              {navItems.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`w-full text-left px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center justify-between ${
-                    activeSection === item.id
-                      ? isDark 
-                        ? 'bg-amber-900/40 text-amber-200 font-semibold border-l-4 border-amber-500' 
-                        : 'bg-amber-100 text-amber-900 font-semibold border-l-4 border-amber-600'
-                      : isDark
-                        ? 'text-stone-300 hover:bg-stone-800'
-                        : 'text-stone-700 hover:bg-stone-100'
-                  }`}
-                >
-                  <span>{item.label}</span>
-                  {item.badge && (
-                    <span className={`${isDark ? 'bg-amber-600 text-stone-950' : 'bg-amber-700 text-white'} text-[11px] font-bold px-2 py-0.5 rounded-full`}>
-                      {item.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
+                );
+              })}
             </div>
 
             {/* Mobile Action Buttons */}
-            <div className={`pt-3 border-t ${isDark ? 'border-stone-800' : 'border-stone-200'} space-y-2`}>
-              <a
-                href={import.meta.env.VITE_CRM_URL || 'http://localhost:3000'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold border transition-all ${
-                  isDark 
-                    ? 'bg-stone-800 hover:bg-stone-750 text-amber-300 border-stone-700' 
-                    : 'bg-stone-100 hover:bg-stone-200 text-amber-950 border-stone-300'
-                }`}
-              >
-                <LogIn className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-                Acceso al Portal CRM
-              </a>
+            <div className="pt-3 border-t border-stone-800/80 space-y-2.5">
               <a
                 href={`tel:${EMERGENCY_INFO.phoneEmergencyMobile.replace(/\s+/g, '')}`}
-                className="w-full flex items-center justify-center gap-2 bg-amber-700 hover:bg-amber-600 text-white font-semibold py-3 rounded-lg text-sm shadow-md"
+                className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-extrabold bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-lg shadow-amber-950/40"
               >
                 <Phone className="w-4 h-4" />
-                Llamar Guardia Urgente (24 Horas)
+                <span>Llamar a Guardia 24hs ({EMERGENCY_INFO.phoneGuard24})</span>
               </a>
+
               <a
                 href={EMERGENCY_INFO.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-lg text-sm shadow-md"
+                className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-extrabold bg-emerald-700 hover:bg-emerald-600 text-white shadow-md"
               >
                 <MessageCircle className="w-4 h-4" />
-                Consultar por WhatsApp
+                <span>Escribir por WhatsApp Urgente</span>
               </a>
             </div>
+
           </div>
         )}
       </nav>
+
     </header>
   );
 };

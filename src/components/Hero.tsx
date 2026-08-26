@@ -28,29 +28,45 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
     <section 
       ref={heroRef}
       className={`relative overflow-hidden ${
-        isDark ? 'bg-stone-950 text-stone-100 border-stone-800' : 'bg-stone-100/80 text-stone-900 border-stone-200'
-      } pt-10 pb-16 sm:pt-14 sm:pb-24 border-b transition-colors duration-300`}
+        isDark ? 'bg-stone-950 text-stone-100 border-stone-850' : 'bg-stone-100 text-stone-900 border-stone-200'
+      } pt-12 pb-20 sm:pt-16 sm:pb-28 border-b transition-colors duration-300`}
     >
+      {/* ── Serene Atmospheric Background Image with Soft Gradient Overlay ── */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {/* Soft Tranquil Image (Golden hour serene landscape & gentle morning light) */}
+        <motion.div 
+          style={{ y: bgBlobY }}
+          className="absolute -inset-10 w-[calc(100%+80px)] h-[calc(100%+80px)] opacity-35 dark:opacity-25 transition-opacity duration-700"
+        >
+          <img 
+            src="https://images.unsplash.com/photo-1518495973542-4542c06a5843?auto=format&fit=crop&w=1920&q=80" 
+            alt="Paz y serenidad" 
+            className="w-full h-full object-cover object-center filter blur-[1px] scale-105"
+          />
+        </motion.div>
+
+        {/* Soft Multi-layered Gradient Veil for Maximum Readability & Harmony */}
+        <div className={`absolute inset-0 ${
+          isDark
+            ? 'bg-gradient-to-r from-stone-950 via-stone-950/90 to-stone-950/75'
+            : 'bg-gradient-to-r from-stone-50 via-stone-50/90 to-stone-50/70'
+        }`} />
+
+        <div className={`absolute inset-0 bg-radial from-transparent via-transparent ${
+          isDark ? 'to-stone-950/90' : 'to-stone-100/80'
+        }`} />
+      </div>
+
       {/* Dynamic Floating Candle Embers & Ambient Serene Lighting */}
       <FloatingCandleEmbers />
 
       {/* Parallax Glowing Light Blobs */}
       <motion.div 
         style={{ y: bgBlobY }}
-        className="absolute inset-0 opacity-25 pointer-events-none"
+        className="absolute inset-0 opacity-20 pointer-events-none"
       >
-        <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full ${isDark ? 'bg-sky-600/30' : 'bg-sky-400/20'} blur-3xl`} />
-        <div className={`absolute top-1/3 -right-32 w-96 h-96 rounded-full ${isDark ? 'bg-amber-600/20' : 'bg-amber-500/15'} blur-3xl`} />
-        <div 
-          className="w-full h-full opacity-10"
-          style={{
-            backgroundImage: isDark
-              ? `radial-gradient(#5dade2 0.75px, transparent 0.75px), radial-gradient(#5dade2 0.75px, #0c0a09 0.75px)`
-              : `radial-gradient(#1b4d75 0.75px, transparent 0.75px), radial-gradient(#1b4d75 0.75px, #f5f5f4 0.75px)`,
-            backgroundSize: '30px 30px',
-            backgroundPosition: '0 0, 15px 15px'
-          }}
-        />
+        <div className={`absolute -top-32 -left-32 w-96 h-96 rounded-full ${isDark ? 'bg-amber-600/25' : 'bg-amber-500/20'} blur-3xl`} />
+        <div className={`absolute top-1/3 -right-32 w-96 h-96 rounded-full ${isDark ? 'bg-sky-600/20' : 'bg-sky-500/15'} blur-3xl`} />
       </motion.div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
