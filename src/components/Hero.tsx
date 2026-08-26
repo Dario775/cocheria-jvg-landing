@@ -55,42 +55,38 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
         
-        {/* Top 3-Branch Network Trust Bar */}
+        {/* Top 3-Branch Network Trust Bar - Sleek & Uncluttered */}
         <motion.div 
-          initial={{ opacity: 0, y: -12 }}
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: 'easeOut' }}
-          className="mb-8 flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-white/75 dark:bg-stone-900/75 border border-stone-200 dark:border-stone-800 backdrop-blur-md shadow-xs"
+          className="mb-8 inline-flex flex-wrap items-center gap-3 px-4 py-2 rounded-full bg-white/70 dark:bg-stone-900/70 border border-stone-200/80 dark:border-stone-800 backdrop-blur-md shadow-xs text-xs"
         >
-          <div className="flex items-center gap-2 text-xs font-semibold text-stone-700 dark:text-stone-300">
-            <Building2 className="w-4 h-4 text-amber-600 flex-shrink-0" />
-            <span className="hidden sm:inline">Red Regional Unificada de Sepelios y Servicios Sociales:</span>
-            <span className="sm:hidden">Red Regional:</span>
+          <div className="flex items-center gap-2 font-semibold text-stone-700 dark:text-stone-300">
+            <Building2 className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+            <span>Presencia Regional:</span>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-2.5 text-stone-600 dark:text-stone-400">
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-sky-50 dark:hover:bg-sky-950/50 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
+              className="font-medium text-stone-800 dark:text-stone-200 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              <UnifiedCompanyLogo brand="jv_gonzalez" variant="emblem" size="xs" />
-              <span className="font-bold text-sky-800 dark:text-sky-300">J.V. González</span>
+              J.V. González
             </button>
-
+            <span className="text-stone-300 dark:text-stone-700">•</span>
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
+              className="font-medium text-stone-800 dark:text-stone-200 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              <UnifiedCompanyLogo brand="guemes" variant="emblem" size="xs" />
-              <span className="font-bold text-stone-800 dark:text-stone-200">Gral. Güemes</span>
+              Gral. Güemes
             </button>
-
+            <span className="text-stone-300 dark:text-stone-700">•</span>
             <button
               onClick={() => onNavigate('sucursales')}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-stone-100 dark:bg-stone-800 hover:bg-rose-50 dark:hover:bg-rose-950/50 text-[11px] font-medium transition-all duration-200 border border-stone-200 dark:border-stone-700 hover:scale-105"
+              className="font-medium text-stone-800 dark:text-stone-200 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
             >
-              <UnifiedCompanyLogo brand="metan" variant="emblem" size="xs" />
-              <span className="font-bold text-rose-800 dark:text-rose-300">Metán</span>
+              Metán
             </button>
           </div>
         </motion.div>
@@ -230,7 +226,7 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
               {/* Action Buttons in Hero Card */}
               <div className="space-y-2.5 pt-2">
                 <button
-                  onClick={() => onNavigate('cotizador')}
+                  onClick={() => onNavigate('servicios')}
                   className={`w-full flex items-center justify-between ${
                     isDark 
                       ? 'bg-stone-800 hover:bg-stone-750 text-stone-200 border-stone-700' 
@@ -238,8 +234,8 @@ export const Hero: React.FC<HeroProps> = ({ onNavigate, onOpenBereavementGuide }
                   } px-4 py-3 rounded-xl text-xs sm:text-sm font-medium border transition-all group`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Calculator className="w-4 h-4 text-amber-600" />
-                    <span>Calcular Presupuesto Online Estimado</span>
+                    <ShieldCheck className="w-4 h-4 text-amber-600" />
+                    <span>Ver Servicios Fúnebres y Coberturas</span>
                   </div>
                   <ChevronRight className={`w-4 h-4 ${isDark ? 'text-stone-400' : 'text-stone-600'} group-hover:translate-x-1 transition-transform`} />
                 </button>

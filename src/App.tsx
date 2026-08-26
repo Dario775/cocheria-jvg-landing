@@ -5,7 +5,6 @@ import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { RegionalBranchesSection } from './components/RegionalBranchesSection';
 import { DigitalObituary } from './components/DigitalObituary';
-import { BudgetCalculator } from './components/BudgetCalculator';
 import { ServicesSection } from './components/ServicesSection';
 import { InstitutionalGallery } from './components/InstitutionalGallery';
 import { TestimonialsSection } from './components/TestimonialsSection';
@@ -14,6 +13,7 @@ import { LocationAndContact } from './components/LocationAndContact';
 import { Footer } from './components/Footer';
 import { FloatingEmergencyButton } from './components/FloatingEmergencyButton';
 import { BereavementGuideModal } from './components/BereavementGuideModal';
+import { DemoSandboxModal } from './components/streaming/DemoSandboxModal';
 import { ParallaxQuoteSection } from './components/effects/ParallaxQuoteSection';
 import { useTheme } from './context/ThemeContext';
 
@@ -22,6 +22,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('inicio');
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   // Initialize obituaries with local storage caching for tributes and candles
   const [obituaries, setObituaries] = useState<Obituary[]>(() => {
@@ -137,7 +138,7 @@ export default function App() {
   // Scroll listener to update active navbar section
   useEffect(() => {
     const handleScrollSpy = () => {
-      const sections = ['inicio', 'sucursales', 'servicios', 'obituario', 'cotizador', 'galeria', 'testimonios', 'preguntas', 'contacto'];
+      const sections = ['inicio', 'sucursales', 'servicios', 'obituario', 'galeria', 'testimonios', 'preguntas', 'contacto'];
       const scrollPos = window.scrollY + 200;
 
       for (const sec of sections) {
@@ -204,8 +205,6 @@ export default function App() {
           onAddTribute={handleAddTribute}
         />
 
-        <BudgetCalculator />
-
         <InstitutionalGallery />
 
         <TestimonialsSection />
@@ -221,12 +220,19 @@ export default function App() {
       {/* Floating 24/7 Emergency Assistance Widget */}
       <FloatingEmergencyButton
         onOpenQuickGuide={() => setIsGuideOpen(true)}
+        onOpenStreamingDemo={() => setIsDemoModalOpen(true)}
       />
 
       {/* Bereavement 3-Step Guide Modal */}
       <BereavementGuideModal
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
+      />
+
+      {/* Internal Demo / Simulator for Virtual Wakes and TV Box */}
+      <DemoSandboxModal
+        isOpen={isDemoModalOpen}
+        onClose={() => setIsDemoModalOpen(false)}
       />
 
     </div>

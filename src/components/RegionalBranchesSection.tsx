@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { MapPin, Phone, MessageCircle, Clock, ShieldCheck, ArrowRight, Building2, CheckCircle2, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { MapPin, Phone, MessageCircle, Clock, ShieldCheck, ArrowRight, Building2, CheckCircle2, ChevronRight, Navigation } from 'lucide-react';
 import { GROUP_BRANCHES, RegionalBranch } from '../data/mockData';
-import { LogoJVGonzalez, LogoGuemes, LogoMetan, UnifiedCompanyLogo } from './logos/CompanyLogos';
 import { useTheme } from '../context/ThemeContext';
 
 interface RegionalBranchesSectionProps {
@@ -14,6 +14,30 @@ export const RegionalBranchesSection: React.FC<RegionalBranchesSectionProps> = (
 
   const currentBranch = GROUP_BRANCHES.find(b => b.id === selectedBranchId) || GROUP_BRANCHES[0];
 
+  const branchStyles = {
+    jv_gonzalez: {
+      accentBorder: 'border-sky-600 dark:border-sky-500',
+      accentRing: 'ring-sky-500/20',
+      accentBg: 'bg-sky-50 dark:bg-sky-950/40 text-sky-800 dark:text-sky-300',
+      activeBtn: 'bg-sky-700 hover:bg-sky-600 text-white',
+      badge: 'bg-sky-100 dark:bg-sky-950/60 text-sky-900 dark:text-sky-300 border-sky-300 dark:border-sky-800'
+    },
+    guemes: {
+      accentBorder: 'border-stone-600 dark:border-stone-400',
+      accentRing: 'ring-stone-500/20',
+      accentBg: 'bg-stone-100 dark:bg-stone-850 text-stone-800 dark:text-stone-200',
+      activeBtn: 'bg-stone-800 dark:bg-stone-700 hover:bg-stone-700 text-white',
+      badge: 'bg-stone-200 dark:bg-stone-800 text-stone-800 dark:text-stone-200 border-stone-300 dark:border-stone-700'
+    },
+    metan: {
+      accentBorder: 'border-rose-700 dark:border-rose-500',
+      accentRing: 'ring-rose-500/20',
+      accentBg: 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-300',
+      activeBtn: 'bg-rose-800 hover:bg-rose-700 text-white',
+      badge: 'bg-rose-100 dark:bg-rose-950/60 text-rose-900 dark:text-rose-300 border-rose-300 dark:border-rose-800'
+    }
+  };
+
   return (
     <section id="sucursales" className={`py-16 sm:py-24 ${
       isDark ? 'bg-stone-900/90 text-stone-100 border-stone-800' : 'bg-stone-50/80 text-stone-900 border-stone-200'
@@ -25,271 +49,205 @@ export const RegionalBranchesSection: React.FC<RegionalBranchesSectionProps> = (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-3">
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-14 space-y-3">
           <div className={`inline-flex items-center gap-2 px-3.5 py-1 rounded-full ${
             isDark ? 'bg-stone-800 border-stone-700 text-stone-300' : 'bg-white border-stone-300 text-stone-700'
           } border text-xs font-semibold shadow-xs`}>
             <Building2 className="w-3.5 h-3.5 text-amber-600" />
-            <span>Red Regional de Servicios Fúnebres & Sociales</span>
+            <span>Red Regional de Cocherías & Servicios Sociales</span>
           </div>
           
           <h2 className={`text-3xl sm:text-4xl font-bold font-serif ${isDark ? 'text-stone-50' : 'text-stone-900'}`}>
-            Nuestras Tres Casas y Sedes en Salta
+            Nuestras Sedes en la Provincia de Salta
           </h2>
           
           <p className={`${isDark ? 'text-stone-300' : 'text-stone-700'} text-sm sm:text-base font-light leading-relaxed`}>
-            Una sólida red de cocherías y servicios sociales con presencia histórica en <strong>Joaquín V. González</strong>, <strong>General Güemes</strong> y <strong>San José de Metán</strong>, unidas por los mismos valores de solemnidad, respeto y calidez humana.
+            Presencia histórica en <strong>Joaquín V. González</strong>, <strong>General Güemes</strong> y <strong>San José de Metán</strong>, brindando cobertura integral, salas velatorias de primer nivel y guardia permanente.
           </p>
         </div>
 
-        {/* 3 Interactive Brand Logos Selector Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          
-          {/* Card 1: Cochería J.V. González */}
-          <div
-            onClick={() => setSelectedBranchId('jv_gonzalez')}
-            className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 border text-center flex flex-col items-center justify-between ${
-              selectedBranchId === 'jv_gonzalez'
-                ? isDark
-                  ? 'bg-stone-850 border-sky-500 shadow-xl ring-2 ring-sky-500/30 -translate-y-1'
-                  : 'bg-white border-sky-600 shadow-xl ring-2 ring-sky-600/20 -translate-y-1'
-                : isDark
-                  ? 'bg-stone-850/60 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
-                  : 'bg-white/80 border-stone-200 hover:border-stone-300 hover:bg-white shadow-xs'
-            }`}
-          >
-            <div className="w-full flex justify-end mb-1">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                selectedBranchId === 'jv_gonzalez'
-                  ? 'bg-sky-900/30 text-sky-400 border-sky-500/40'
-                  : 'bg-stone-800/40 text-stone-400 border-stone-700'
-              }`}>
-                Casa Central
-              </span>
-            </div>
+        {/* 3 Interactive Branch Selector Cards (Clean, Sober, Uncluttered) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
+          {GROUP_BRANCHES.map((branch) => {
+            const isSelected = selectedBranchId === branch.id;
+            const style = branchStyles[branch.id as keyof typeof branchStyles];
 
-            <div className="py-3 flex items-center justify-center min-h-[160px]">
-              <LogoJVGonzalez variant="full" size="sm" isDark={isDark} />
-            </div>
+            return (
+              <motion.div
+                key={branch.id}
+                whileHover={{ y: -4 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setSelectedBranchId(branch.id as any)}
+                className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 border flex flex-col justify-between ${
+                  isSelected
+                    ? isDark
+                      ? `bg-stone-850 ${style.accentBorder} shadow-xl ring-2 ${style.accentRing}`
+                      : `bg-white ${style.accentBorder} shadow-xl ring-2 ${style.accentRing}`
+                    : isDark
+                      ? 'bg-stone-850/60 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
+                      : 'bg-white border-stone-200 hover:border-stone-300 shadow-xs'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-3">
+                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${style.badge}`}>
+                      {branch.categoryTag}
+                    </span>
+                    <span className={`text-xs font-mono ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
+                      Guardia 24hs
+                    </span>
+                  </div>
 
-            <div className="w-full pt-4 border-t border-stone-200 dark:border-stone-800 text-left space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-sky-700 dark:text-sky-400">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Joaquín V. González (Anta)</span>
-              </div>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 line-clamp-2">
-                Av. General Güemes 450 • Cobertura integral en todo el Departamento Anta y rutas provinciales.
-              </p>
-            </div>
+                  <h3 className={`font-serif font-bold text-xl mb-1.5 ${
+                    isDark ? 'text-stone-100' : 'text-stone-900'
+                  }`}>
+                    {branch.brandName}
+                  </h3>
 
-            <div className={`mt-4 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-              selectedBranchId === 'jv_gonzalez'
-                ? 'bg-sky-700 text-white'
-                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'
-            }`}>
-              <span>Ver información y guardia</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
+                  <div className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400 mb-3">
+                    <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>{branch.city} • {branch.department}</span>
+                  </div>
 
-          {/* Card 2: Servicios Sociales Güemes */}
-          <div
-            onClick={() => setSelectedBranchId('guemes')}
-            className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 border text-center flex flex-col items-center justify-between ${
-              selectedBranchId === 'guemes'
-                ? isDark
-                  ? 'bg-stone-850 border-stone-400 shadow-xl ring-2 ring-stone-400/30 -translate-y-1'
-                  : 'bg-white border-stone-900 shadow-xl ring-2 ring-stone-900/20 -translate-y-1'
-                : isDark
-                  ? 'bg-stone-850/60 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
-                  : 'bg-white/80 border-stone-200 hover:border-stone-300 hover:bg-white shadow-xs'
-            }`}
-          >
-            <div className="w-full flex justify-end mb-1">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                selectedBranchId === 'guemes'
-                  ? 'bg-stone-800 text-stone-200 border-stone-500/40'
-                  : 'bg-stone-800/40 text-stone-400 border-stone-700'
-              }`}>
-                Valle de Siancas
-              </span>
-            </div>
+                  <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-600'} leading-relaxed line-clamp-2`}>
+                    {branch.address} • {branch.description}
+                  </p>
+                </div>
 
-            <div className="py-3 flex items-center justify-center min-h-[160px]">
-              <LogoGuemes variant="full" size="sm" isDark={isDark} />
-            </div>
-
-            <div className="w-full pt-4 border-t border-stone-200 dark:border-stone-800 text-left space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-stone-800 dark:text-stone-300">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>General Güemes (Centro)</span>
-              </div>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 line-clamp-2">
-                Alberdi 320 • Cobertura Campo Santo, El Bordo, Cobos y corredor Ruta Nacional 34.
-              </p>
-            </div>
-
-            <div className={`mt-4 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-              selectedBranchId === 'guemes'
-                ? 'bg-stone-900 dark:bg-stone-200 text-white dark:text-stone-900'
-                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'
-            }`}>
-              <span>Ver información y guardia</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
-          {/* Card 3: Cochería Metán */}
-          <div
-            onClick={() => setSelectedBranchId('metan')}
-            className={`cursor-pointer rounded-2xl p-6 transition-all duration-300 border text-center flex flex-col items-center justify-between ${
-              selectedBranchId === 'metan'
-                ? isDark
-                  ? 'bg-stone-850 border-rose-500 shadow-xl ring-2 ring-rose-500/30 -translate-y-1'
-                  : 'bg-white border-rose-700 shadow-xl ring-2 ring-rose-700/20 -translate-y-1'
-                : isDark
-                  ? 'bg-stone-850/60 border-stone-800 hover:border-stone-700 hover:bg-stone-850'
-                  : 'bg-white/80 border-stone-200 hover:border-stone-300 hover:bg-white shadow-xs'
-            }`}
-          >
-            <div className="w-full flex justify-end mb-1">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                selectedBranchId === 'metan'
-                  ? 'bg-rose-950/40 text-rose-300 border-rose-500/40'
-                  : 'bg-stone-800/40 text-stone-400 border-stone-700'
-              }`}>
-                Sur de Salta
-              </span>
-            </div>
-
-            <div className="py-3 flex items-center justify-center min-h-[160px]">
-              <LogoMetan variant="full" size="sm" isDark={isDark} />
-            </div>
-
-            <div className="w-full pt-4 border-t border-stone-200 dark:border-stone-800 text-left space-y-1.5">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-rose-800 dark:text-rose-400">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>San José de Metán</span>
-              </div>
-              <p className="text-[11px] text-stone-500 dark:text-stone-400 line-clamp-2">
-                25 de Mayo 180 • Cobertura Río Piedras, El Galpón, Rosario de la Frontera y Ruta 9/34.
-              </p>
-            </div>
-
-            <div className={`mt-4 w-full py-1.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-              selectedBranchId === 'metan'
-                ? 'bg-rose-800 text-white'
-                : 'bg-stone-100 dark:bg-stone-800 text-stone-600 dark:text-stone-300'
-            }`}>
-              <span>Ver información y guardia</span>
-              <ChevronRight className="w-3.5 h-3.5" />
-            </div>
-          </div>
-
+                <div className="mt-5 pt-4 border-t border-stone-200 dark:border-stone-800/80">
+                  <div className={`w-full py-2 px-3 rounded-xl text-xs font-semibold transition-colors flex items-center justify-between ${
+                    isSelected
+                      ? style.activeBtn
+                      : isDark ? 'bg-stone-800 text-stone-300 hover:bg-stone-750' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
+                  }`}>
+                    <span>{isSelected ? 'Sede seleccionada' : 'Ver datos de guardia'}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        {/* Detailed Selected Branch Info Panel */}
-        <div className={`rounded-3xl border ${
-          isDark ? 'bg-stone-850 border-stone-800' : 'bg-white border-stone-200 shadow-xl'
-        } p-6 sm:p-10 transition-all duration-300`}>
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            {/* Left: Brand Emblem & Quick Details */}
-            <div className="lg:col-span-5 flex flex-col items-center text-center p-6 rounded-2xl bg-stone-100/70 dark:bg-stone-900/60 border border-stone-200 dark:border-stone-800">
-              <UnifiedCompanyLogo
-                brand={currentBranch.id}
-                variant="full"
-                size="md"
-                isDark={isDark}
-              />
+        {/* Detailed Selected Branch Info Panel with AnimatePresence */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentBranch.id}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.35, ease: 'easeOut' }}
+            className={`rounded-3xl border ${
+              isDark ? 'bg-stone-850 border-stone-800' : 'bg-white border-stone-200 shadow-xl'
+            } p-6 sm:p-9 transition-all duration-300`}
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* Left Column: Direct Action & Location Box */}
+              <div className="lg:col-span-5 space-y-4 p-6 rounded-2xl bg-stone-100/80 dark:bg-stone-900/70 border border-stone-200 dark:border-stone-800">
+                <div className="space-y-1">
+                  <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border inline-block ${currentBranch.badgeBg}`}>
+                    {currentBranch.categoryTag}
+                  </span>
+                  <h4 className="text-xl font-serif font-bold text-stone-900 dark:text-stone-100">
+                    {currentBranch.brandName}
+                  </h4>
+                  <p className="text-xs text-stone-500 dark:text-stone-400">
+                    {currentBranch.city} • {currentBranch.department}, Salta
+                  </p>
+                </div>
 
-              <div className="mt-6 w-full space-y-2.5 text-xs text-left">
-                <div className="flex items-start gap-2 text-stone-700 dark:text-stone-300">
-                  <MapPin className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <strong className="block text-stone-900 dark:text-stone-100 font-semibold">{currentBranch.address}</strong>
-                    <span>{currentBranch.city} ({currentBranch.department})</span>
+                <div className="space-y-3 pt-3 border-t border-stone-200 dark:border-stone-800 text-xs">
+                  <div className="flex items-start gap-2 text-stone-700 dark:text-stone-300">
+                    <MapPin className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong className="block text-stone-900 dark:text-stone-100 font-semibold">{currentBranch.address}</strong>
+                      <span className="text-[11px] text-stone-500">Atención presencial y administración</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
+                    <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                    <span>Guardia Permanente: <strong>24 Horas los 365 Días</strong></span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-stone-700 dark:text-stone-300">
-                  <Clock className="w-4 h-4 text-amber-600 flex-shrink-0" />
-                  <span>Guardia Fúnebre: <strong>Atención 24 Horas los 365 Días</strong></span>
+                {/* Direct Call & WhatsApp Buttons */}
+                <div className="pt-3 space-y-2">
+                  <a
+                    href={`tel:${currentBranch.phoneGuard.replace(/\s+/g, '')}`}
+                    className="w-full flex items-center justify-center gap-2 bg-amber-700 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow-md transition-colors"
+                  >
+                    <Phone className="w-4 h-4 text-amber-200" />
+                    <span>Llamar a Sede: {currentBranch.phoneGuard}</span>
+                  </a>
+
+                  <a
+                    href={currentBranch.whatsappUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full flex items-center justify-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-xl text-xs sm:text-sm shadow-md transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    <span>WhatsApp de Guardia Directo</span>
+                  </a>
                 </div>
               </div>
+
+              {/* Right Column: Coverage, Facilities & Description */}
+              <div className="lg:col-span-7 space-y-5">
+                <div>
+                  <h3 className={`text-xl sm:text-2xl font-serif font-bold ${isDark ? 'text-stone-50' : 'text-stone-900'}`}>
+                    Respaldo y Servicios en {currentBranch.city}
+                  </h3>
+                  <p className={`mt-2 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'} leading-relaxed font-light`}>
+                    {currentBranch.description}
+                  </p>
+                </div>
+
+                {/* Coverage & Services Bullet Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                  <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 space-y-2">
+                    <span className="font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider text-[11px] block">
+                      Zonas de Cobertura Directa:
+                    </span>
+                    <ul className="space-y-1.5 text-stone-600 dark:text-stone-300">
+                      {currentBranch.coverage.map((area, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900/50 border border-stone-200 dark:border-stone-800 space-y-2">
+                    <span className="font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider text-[11px] block">
+                      Servicios e Infraestructura:
+                    </span>
+                    <ul className="space-y-1.5 text-stone-600 dark:text-stone-300">
+                      {currentBranch.features.map((feat, idx) => (
+                        <li key={idx} className="flex items-center gap-1.5">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                          <span>{feat}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Reassurance note */}
+                <div className={`p-3.5 rounded-xl ${isDark ? 'bg-amber-950/30 border-amber-900/40 text-amber-200' : 'bg-amber-50 border-amber-200 text-amber-900'} border text-xs flex items-center gap-2.5`}>
+                  <ShieldCheck className="w-4 h-4 text-amber-600 flex-shrink-0" />
+                  <span>
+                    Atención directa a afiliados, convenios PAMI, obras sociales y particulares sin demoras.
+                  </span>
+                </div>
+              </div>
+
             </div>
-
-            {/* Right: Branch Specifics, Services and Direct Contact Actions */}
-            <div className="lg:col-span-7 space-y-6">
-              <div>
-                <div className="inline-block mb-2">
-                  <span className={`text-xs font-semibold px-3 py-1 rounded-full border ${currentBranch.badgeBg}`}>
-                    {currentBranch.categoryTag}
-                  </span>
-                </div>
-                <h3 className={`text-2xl sm:text-3xl font-serif font-bold ${isDark ? 'text-stone-50' : 'text-stone-900'}`}>
-                  {currentBranch.brandName}
-                </h3>
-                <p className={`mt-2 text-xs sm:text-sm ${isDark ? 'text-stone-300' : 'text-stone-600'} leading-relaxed font-light`}>
-                  {currentBranch.description}
-                </p>
-              </div>
-
-              {/* Coverage & Services Bullet Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-2">
-                  <span className="font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider text-[11px] block">
-                    Zonas de Cobertura Directa:
-                  </span>
-                  <ul className="space-y-1.5 text-stone-600 dark:text-stone-300">
-                    {currentBranch.coverage.map((area, idx) => (
-                      <li key={idx} className="flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
-                        <span>{area}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="p-4 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 space-y-2">
-                  <span className="font-bold text-stone-900 dark:text-stone-100 uppercase tracking-wider text-[11px] block">
-                    Servicios e Infraestructura:
-                  </span>
-                  <ul className="space-y-1.5 text-stone-600 dark:text-stone-300">
-                    {currentBranch.features.map((feat, idx) => (
-                      <li key={idx} className="flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Action Buttons for this specific branch */}
-              <div className="flex flex-wrap gap-3 pt-2">
-                <a
-                  href={`tel:${currentBranch.phoneMobile.replace(/\s+/g, '')}`}
-                  className="flex items-center gap-2 bg-amber-700 hover:bg-amber-600 text-white px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all"
-                >
-                  <Phone className="w-4 h-4" />
-                  <span>Llamar Guardia {currentBranch.city}: {currentBranch.phoneMobile}</span>
-                </a>
-
-                <a
-                  href={currentBranch.whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-600 text-white px-5 py-3 rounded-xl font-semibold text-xs sm:text-sm shadow-md transition-all"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  <span>WhatsApp Directo</span>
-                </a>
-              </div>
-            </div>
-
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
 
       </div>
     </section>

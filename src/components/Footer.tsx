@@ -21,60 +21,49 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
     } border-t pt-16 pb-12 transition-colors duration-300`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Top 3-Brand Emblem Showcase in Footer */}
+        {/* Regional Presence Strip in Footer - Clean & Non-repetitive */}
         <div className="mb-12 pb-10 border-b border-stone-800">
-          <div className="text-center max-w-2xl mx-auto mb-8">
-            <span className="text-[11px] uppercase tracking-widest text-amber-400 font-semibold flex items-center justify-center gap-1.5 mb-1.5">
-              <Building2 className="w-3.5 h-3.5" />
-              Red Regional Salteña de Servicios Sociales & Fúnebres
-            </span>
-            <h3 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
-              Nuestras 3 Empresas y Sedes Oficiales
-            </h3>
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+              <span className="text-[11px] uppercase tracking-widest text-amber-400 font-semibold flex items-center gap-1.5 mb-1">
+                <Building2 className="w-3.5 h-3.5" />
+                Red de Casas y Sedes en Salta
+              </span>
+              <h3 className="text-lg sm:text-xl font-serif font-bold text-stone-100">
+                Atención y Guardia Permanente 24 Horas
+              </h3>
+            </div>
+            <button
+              onClick={() => onNavigate('sucursales')}
+              className="text-xs text-amber-400 hover:text-amber-300 font-medium self-start md:self-auto transition-colors"
+            >
+              Ver detalles de cobertura regional →
+            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Brand 1: J.V. González */}
-            <div 
-              onClick={() => onNavigate('sucursales')}
-              className="cursor-pointer p-5 rounded-2xl bg-stone-900/80 border border-stone-800 hover:border-sky-500/50 hover:bg-stone-850 transition-all flex flex-col items-center text-center group"
-            >
-              <div className="py-2">
-                <LogoJVGonzalez variant="compact" size="xs" isDark={true} />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {GROUP_BRANCHES.map((branch) => (
+              <div 
+                key={branch.id}
+                onClick={() => onNavigate('sucursales')}
+                className="cursor-pointer p-4 rounded-xl bg-stone-900/60 border border-stone-800 hover:border-amber-500/40 hover:bg-stone-900 transition-all text-xs space-y-1.5 group"
+              >
+                <div className="flex items-center justify-between">
+                  <strong className="text-stone-100 font-semibold group-hover:text-amber-300 transition-colors">
+                    {branch.brandName}
+                  </strong>
+                  <span className="text-[10px] text-amber-500 font-mono">Guardia 24hs</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-stone-400">
+                  <MapPin className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+                  <span>{branch.address} • {branch.city}</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-stone-300 pt-1">
+                  <Phone className="w-3 h-3 text-amber-500 flex-shrink-0" />
+                  <span className="font-mono">{branch.phoneGuard}</span>
+                </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-stone-800 w-full text-xs text-stone-400">
-                <strong className="block text-stone-200">Casa Central • J.V. González</strong>
-                <span>Av. General Güemes 450 • Anta</span>
-              </div>
-            </div>
-
-            {/* Brand 2: Güemes */}
-            <div 
-              onClick={() => onNavigate('sucursales')}
-              className="cursor-pointer p-5 rounded-2xl bg-stone-900/80 border border-stone-800 hover:border-stone-400/50 hover:bg-stone-850 transition-all flex flex-col items-center text-center group"
-            >
-              <div className="py-2">
-                <LogoGuemes variant="compact" size="xs" isDark={true} />
-              </div>
-              <div className="mt-3 pt-3 border-t border-stone-800 w-full text-xs text-stone-400">
-                <strong className="block text-stone-200">Servicios Sociales Güemes</strong>
-                <span>Alberdi 320 • Valle de Siancas</span>
-              </div>
-            </div>
-
-            {/* Brand 3: Metán */}
-            <div 
-              onClick={() => onNavigate('sucursales')}
-              className="cursor-pointer p-5 rounded-2xl bg-stone-900/80 border border-stone-800 hover:border-rose-500/50 hover:bg-stone-850 transition-all flex flex-col items-center text-center group"
-            >
-              <div className="py-2">
-                <LogoMetan variant="compact" size="xs" isDark={true} />
-              </div>
-              <div className="mt-3 pt-3 border-t border-stone-800 w-full text-xs text-stone-400">
-                <strong className="block text-stone-200">Cochería Metán</strong>
-                <span>25 de Mayo 180 • San José de Metán</span>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
 
@@ -171,11 +160,6 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               <li>
                 <button onClick={() => onNavigate('obituario')} className="hover:text-amber-300 transition-colors">
                   Obituario Digital & Homenajes
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('cotizador')} className="hover:text-amber-300 transition-colors">
-                  Presupuesto Rápido Online
                 </button>
               </li>
               <li>

@@ -11,26 +11,44 @@ interface BereavementGuideModalProps {
 export const BereavementGuideModal: React.FC<BereavementGuideModalProps> = ({ isOpen, onClose }) => {
   const { isDark } = useTheme();
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalStyle;
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className={`relative w-full max-w-3xl ${
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
+    >
+      <div className={`relative w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] flex flex-col ${
         isDark ? 'bg-stone-900 border-stone-750 text-stone-100' : 'bg-white border-stone-200 text-stone-900 shadow-2xl'
-      } border rounded-2xl shadow-2xl overflow-hidden my-6`}>
+      } border rounded-2xl shadow-2xl overflow-hidden`}>
         
-        {/* Header */}
-        <div className={`${
-          isDark ? 'bg-gradient-to-r from-stone-850 to-stone-900 border-stone-800' : 'bg-gradient-to-r from-stone-100 to-white border-stone-200'
-        } border-b p-5 sm:p-6 flex items-start justify-between`}>
+        {/* Sticky Header */}
+        <div className={`sticky top-0 z-20 flex-shrink-0 ${
+          isDark ? 'bg-stone-900/95 border-stone-800' : 'bg-white/95 border-stone-200'
+        } backdrop-blur-md border-b p-4 sm:p-5 px-5 sm:px-6 flex items-center justify-between shadow-xs`}>
           <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-xl ${
+            <div className={`w-9 h-9 rounded-xl ${
               isDark ? 'bg-amber-950 border-amber-700/60 text-amber-300' : 'bg-amber-100 border-amber-300 text-amber-900'
             } border flex items-center justify-center flex-shrink-0`}>
-              <FileText className="w-5 h-5" />
+              <FileText className="w-4 h-4" />
             </div>
             <div>
-              <h2 className={`font-serif font-bold text-xl ${isDark ? 'text-stone-50' : 'text-stone-900'}`}>
+              <h2 className={`font-serif font-bold text-lg sm:text-xl ${isDark ? 'text-stone-50' : 'text-stone-900'}`}>
                 Guía Familiar: ¿Qué hacer ante un fallecimiento?
               </h2>
               <p className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>
@@ -40,10 +58,15 @@ export const BereavementGuideModal: React.FC<BereavementGuideModalProps> = ({ is
           </div>
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-lg ${isDark ? 'text-stone-400 hover:text-white hover:bg-stone-800' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'} transition-colors`}
+            className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-semibold ${
+              isDark 
+                ? 'bg-stone-800 text-stone-200 hover:bg-stone-700 border-stone-700 hover:text-white' 
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border-stone-300 hover:text-stone-900'
+            } transition-all shadow-xs`}
             aria-label="Cerrar guía"
           >
-            <X className="w-6 h-6" />
+            <span>Cerrar</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 

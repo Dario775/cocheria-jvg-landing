@@ -31,6 +31,21 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
   const [selectedPresetMessage, setSelectedPresetMessage] = useState('');
   const [tributeSuccessMessage, setTributeSuccessMessage] = useState<string | null>(null);
 
+  // Lock scroll and handle Escape key
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalStyle;
+    };
+  }, [onClose]);
+
   const presetMessages = [
     'Acompañamos a la familia en este doloroso momento y elevamos una oración por su eterno descanso.',
     'Que la paz y el consuelo de Dios abracen sus corazones ante tan irreparable pérdida.',
@@ -105,15 +120,18 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
   const isEnVelacion = obituary.status === 'en_velacion';
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200">
-      <div className={`relative w-full max-w-4xl ${
+    <div 
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+      className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 md:p-6 animate-in fade-in duration-200"
+    >
+      <div className={`relative w-full max-w-4xl max-h-[92vh] sm:max-h-[88vh] flex flex-col ${
         isDark ? 'bg-stone-900 border-stone-750 text-stone-100' : 'bg-white border-stone-200 text-stone-900 shadow-2xl'
-      } border rounded-2xl overflow-hidden my-6`}>
+      } border rounded-2xl shadow-2xl overflow-hidden`}>
         
-        {/* Modal Header */}
-        <div className={`relative ${
-          isDark ? 'bg-gradient-to-b from-stone-850 to-stone-900 border-stone-800' : 'bg-gradient-to-b from-stone-100 to-white border-stone-200'
-        } border-b p-4 sm:p-6 flex items-start justify-between`}>
+        {/* Sticky Modal Header - Always Visible */}
+        <div className={`sticky top-0 z-20 flex-shrink-0 ${
+          isDark ? 'bg-stone-900/95 border-stone-800' : 'bg-white/95 border-stone-200'
+        } backdrop-blur-md border-b p-3.5 sm:p-4 px-4 sm:px-6 flex items-center justify-between shadow-xs`}>
           <div className="flex items-center gap-3">
             <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${
               isEnVelacion
@@ -122,20 +140,25 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
             }`}>
               {isEnVelacion ? '• En Sala de Velación' : 'Descanso Eterno'}
             </span>
-            <span className={`text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>Memorial Cochería J.V. González</span>
+            <span className={`hidden sm:inline text-xs ${isDark ? 'text-stone-400' : 'text-stone-500'}`}>Memorial Cochería J.V. González</span>
           </div>
 
           <button
             onClick={onClose}
-            className={`p-1.5 rounded-full ${isDark ? 'text-stone-400 hover:text-white hover:bg-stone-800' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'} transition-colors`}
+            className={`px-3 py-1.5 rounded-xl border flex items-center gap-1.5 text-xs font-semibold ${
+              isDark 
+                ? 'bg-stone-800 text-stone-200 hover:bg-stone-700 border-stone-700 hover:text-white' 
+                : 'bg-stone-100 text-stone-700 hover:bg-stone-200 border-stone-300 hover:text-stone-900'
+            } transition-all shadow-xs`}
             aria-label="Cerrar memorial"
           >
-            <X className="w-6 h-6" />
+            <span>Cerrar</span>
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Modal Hero / Tribute Summary */}
-        <div className={`p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-stone-900' : 'bg-white'}`}>
+        {/* Scrollable Content Body */}
+        <div className={`overflow-y-auto flex-1 p-4 sm:p-6 lg:p-8 ${isDark ? 'bg-stone-900' : 'bg-white'}`}>
           <div className="flex flex-col md:flex-row gap-6 items-center md:items-start">
             
             {/* Photo with dignified memorial frame */}
@@ -531,6 +554,37 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
             </div>
           )}
 
+        </div>
+
+        {/* Sticky Modal Footer */}
+        <div className={`sticky bottom-0 z-20 flex-shrink-0 ${
+          isDark ? 'bg-stone-900/95 border-stone-800' : 'bg-white/95 border-stone-200'
+        } backdrop-blur-md border-t p-3 sm:p-4 px-4 sm:px-6 flex items-center justify-between gap-3 shadow-lg`}>
+          <div className="flex items-center gap-2 text-xs text-stone-500">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 hidden sm:inline" />
+            <span className="text-[11px] sm:text-xs">Cochería J.V. González • Memorial Digital</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleShareWhatsApp}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-semibold transition-colors shadow-xs"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Compartir</span>
+            </button>
+
+            <button
+              onClick={onClose}
+              className={`px-4 py-1.5 rounded-xl text-xs font-semibold border transition-all ${
+                isDark 
+                  ? 'bg-stone-800 hover:bg-stone-750 text-stone-200 border-stone-700 hover:text-white' 
+                  : 'bg-stone-100 hover:bg-stone-200 text-stone-800 border-stone-300'
+              }`}
+            >
+              Cerrar
+            </button>
+          </div>
         </div>
 
       </div>

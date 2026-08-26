@@ -34,14 +34,13 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   const navItems = [
     { id: 'inicio', label: 'Inicio' },
-    { id: 'sucursales', label: 'Nuestras 3 Sedes', badge: 'Red Salta' },
+    { id: 'sucursales', label: 'Sedes Regionales' },
     { id: 'servicios', label: 'Servicios' },
     { 
       id: 'obituario', 
       label: 'Obituario Digital',
       badge: activeObituariesCount > 0 ? `${activeObituariesCount} en sala` : undefined
     },
-    { id: 'cotizador', label: 'Presupuesto' },
     { id: 'galeria', label: 'Instalaciones' },
     { id: 'testimonios', label: 'Testimonios' },
     { id: 'preguntas', label: 'Preguntas' },
@@ -169,7 +168,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           : 'bg-white/95 text-stone-900 border-stone-200'
       } backdrop-blur-md border-b transition-all ${isScrolled ? 'shadow-lg py-2.5' : 'py-3'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between">
-          {/* Brand Logo with authentic gothic arch & cross emblem */}
+          {/* Brand Logo */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => handleNavClick('inicio')}
@@ -192,46 +191,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </span>
               </div>
             </button>
-
-            {/* Quick 3-Brand Indicator Pill */}
-            <div className="relative hidden 2xl:block">
-              <button
-                onClick={() => setBranchDropdownOpen(!branchDropdownOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
-                  isDark ? 'bg-stone-900 border-stone-750 text-stone-300 hover:border-amber-600' : 'bg-stone-100 border-stone-300 text-stone-700 hover:border-amber-600'
-                }`}
-              >
-                <Building2 className="w-3 h-3 text-amber-600" />
-                <span>3 Sedes: Anta • Güemes • Metán</span>
-                <ChevronDown className={`w-3 h-3 transition-transform ${branchDropdownOpen ? 'rotate-180' : ''}`} />
-              </button>
-
-              {/* Branch quick dropdown */}
-              {branchDropdownOpen && (
-                <div className={`absolute top-full left-0 mt-2 w-72 rounded-xl shadow-2xl border p-2 z-50 animate-in fade-in ${
-                  isDark ? 'bg-stone-900 border-stone-750 text-stone-200' : 'bg-white border-stone-200 text-stone-900'
-                }`}>
-                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-800/50 mb-1">
-                    Red de Cocherías del Grupo
-                  </div>
-                  {GROUP_BRANCHES.map(branch => (
-                    <button
-                      key={branch.id}
-                      onClick={() => handleNavClick('sucursales')}
-                      className={`w-full text-left p-2 rounded-lg flex items-center gap-2.5 transition-colors ${
-                        isDark ? 'hover:bg-stone-800' : 'hover:bg-stone-100'
-                      }`}
-                    >
-                      <UnifiedCompanyLogo brand={branch.id} variant="emblem" size="xs" />
-                      <div>
-                        <div className="font-bold text-xs">{branch.brandName}</div>
-                        <div className="text-[10px] text-stone-400">{branch.city} • {branch.phoneGuard}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* Desktop Navigation Links */}
