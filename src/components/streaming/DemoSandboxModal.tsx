@@ -86,7 +86,7 @@ export const DemoSandboxModal: React.FC<DemoSandboxModalProps> = ({ isOpen, onCl
             cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
             accessPin: '8492',
             isLive: true,
-            streamUrl: 'https://youtube.com/live/vzJawwJmq9M?feature=share'
+            streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share'
           }}
         />
       </div>
