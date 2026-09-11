@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, ShieldCheck } from 'lucide-react';
+import { X, ShieldCheck, Tv, Monitor } from 'lucide-react';
 import { VirtualWakeRoom } from './VirtualWakeRoom';
+import { TVKioskDisplay } from './TVKioskDisplay';
 
 interface DemoSandboxModalProps {
   isOpen: boolean;
@@ -8,6 +9,8 @@ interface DemoSandboxModalProps {
 }
 
 export const DemoSandboxModal: React.FC<DemoSandboxModalProps> = ({ isOpen, onClose }) => {
+  const [activeTab, setActiveTab] = useState<'virtual_wake' | 'tv_kiosk'>('virtual_wake');
+
   // Cerrar con tecla Escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -47,9 +50,35 @@ export const DemoSandboxModal: React.FC<DemoSandboxModalProps> = ({ isOpen, onCl
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
             EN DIRECTO
           </span>
-          <span className="hidden sm:inline-block text-xs text-stone-400">
+          <span className="hidden lg:inline-block text-xs text-stone-400">
             • Capilla Ardiente Virtual
           </span>
+        </div>
+
+        {/* Selector de Modo: Capilla Virtual o Pantalla TV Box */}
+        <div className="flex items-center bg-stone-950 p-1 rounded-xl border border-stone-800 text-xs shadow-inner">
+          <button
+            onClick={() => setActiveTab('virtual_wake')}
+            className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'virtual_wake'
+                ? 'bg-amber-600 text-white font-semibold shadow-xs'
+                : 'text-stone-400 hover:text-stone-200'
+            }`}
+          >
+            <Monitor className="w-3.5 h-3.5" />
+            <span>Capilla Virtual</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('tv_kiosk')}
+            className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'tv_kiosk'
+                ? 'bg-amber-600 text-white font-semibold shadow-xs'
+                : 'text-stone-400 hover:text-stone-200'
+            }`}
+          >
+            <Tv className="w-3.5 h-3.5" />
+            <span>Modo TV Box</span>
+          </button>
         </div>
 
         {/* Acciones de Cierre */}
@@ -71,24 +100,35 @@ export const DemoSandboxModal: React.FC<DemoSandboxModalProps> = ({ isOpen, onCl
 
       {/* Contenedor Principal: 100% sin scroll externo */}
       <div className="flex-1 w-full h-[calc(100vh-52px)] flex flex-col overflow-hidden">
-        <VirtualWakeRoom
-          hideHeader={true}
-          onClose={onClose}
-          serviceData={{
-            id: 'demo-sepelio-1',
-            deceasedName: 'Don Roberto Ernesto Figueroa',
-            birthYear: '1943',
-            passedYear: '2026',
-            age: 83,
-            photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-            chapelRoom: 'Sala Magna A',
-            branchName: 'Sede Central - Joaquín V. González',
-            cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
-            accessPin: '8492',
-            isLive: true,
-            streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share'
-          }}
-        />
+        {activeTab === 'virtual_wake' ? (
+          <VirtualWakeRoom
+            hideHeader={true}
+            onClose={onClose}
+            serviceData={{
+              id: 'demo-sepelio-1',
+              deceasedName: 'Don Roberto Ernesto Figueroa',
+              birthYear: '1943',
+              passedYear: '2026',
+              age: 83,
+              photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
+              chapelRoom: 'Sala Magna A',
+              branchName: 'Sede Central - Joaquín V. González',
+              cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
+              accessPin: '8492',
+              isLive: true,
+              streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share'
+            }}
+          />
+        ) : (
+          <div className="w-full h-full p-2 sm:p-4 bg-stone-950 flex flex-col overflow-hidden">
+            <TVKioskDisplay
+              deviceCode="TV-JVG-01"
+              roomName="Sala Magna A"
+              branchName="Casa Central • Joaquín V. González"
+              onClose={onClose}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
