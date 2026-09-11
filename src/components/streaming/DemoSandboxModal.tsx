@@ -83,12 +83,34 @@ export const DemoSandboxModal: React.FC<DemoSandboxModalProps> = ({ isOpen, onCl
         <div className="overflow-y-auto flex-1 p-3 sm:p-5">
           {activeTab === 'virtual_wake' ? (
             <div className="space-y-3">
-              <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-800 dark:text-amber-300 flex items-center justify-between">
-                <span>
-                  💡 <strong>Instrucción de prueba:</strong> Para ingresar a la transmisión privada ingrese el <strong>PIN: 8492</strong> (o escriba "demo").
-                </span>
+              {/* Institutional Notice with Demo PIN */}
+              <div className={`p-3.5 sm:p-4 rounded-2xl border ${
+                isDark ? 'bg-amber-950/20 border-amber-800/30 text-stone-200' : 'bg-amber-500/10 border-amber-500/20 text-stone-800'
+              } flex flex-wrap items-center justify-between gap-3 shadow-xs`}>
+                <div className="flex items-center gap-2.5">
+                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse" />
+                  <span className="text-xs">
+                    💡 <strong>Transmisión Privada en Directo:</strong> Ingrese con el PIN de prueba <strong className="font-mono text-amber-600 dark:text-amber-400 font-bold px-1.5 py-0.5 rounded bg-amber-500/15">8492</strong> (o escriba &quot;demo&quot;) para conectarse a la capilla ardiente.
+                  </span>
+                </div>
               </div>
-              <VirtualWakeRoom />
+
+              <VirtualWakeRoom
+                serviceData={{
+                  id: 'demo-sepelio-1',
+                  deceasedName: 'Don Roberto Ernesto Figueroa',
+                  birthYear: '1943',
+                  passedYear: '2026',
+                  age: 83,
+                  photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
+                  chapelRoom: 'Sala Magna A',
+                  branchName: 'Sede Central - Joaquín V. González',
+                  cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
+                  accessPin: '8492',
+                  isLive: true,
+                  streamUrl: 'https://youtube.com/live/vzJawwJmq9M?feature=share'
+                }}
+              />
             </div>
           ) : (
             <div className="space-y-3">
