@@ -556,16 +556,15 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
             >
               {youtubeId ? (
                 <div className="absolute inset-0 bg-black overflow-hidden flex items-center justify-center">
-                  {/* YouTube Embed */}
-                  <div className={`relative w-full h-full overflow-hidden flex items-center justify-center transition-opacity duration-700 ${isConnecting ? 'opacity-0' : 'opacity-100'}`}>
+                  {/* YouTube Embed without UI, cropped perimetrally */}
+                  <div className={`relative w-full h-full overflow-hidden flex items-center justify-center pointer-events-none transition-opacity duration-700 ${isConnecting ? 'opacity-0' : 'opacity-100'}`}>
                     <iframe
                       ref={iframeRef}
-                      src={`${getYouTubeEmbedUrl(serviceData.streamUrl)}?autoplay=1&mute=1&playsinline=1&enablejsapi=1&rel=0&modestbranding=1&controls=0&origin=${typeof window !== 'undefined' ? encodeURIComponent(window.location.origin) : ''}`}
+                      src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1`}
                       title="Transmisión en Vivo de Capilla Ardiente"
-                      className="w-full h-full border-0 select-none"
+                      className="w-[114%] h-[114%] max-w-none border-0 pointer-events-none select-none -translate-y-[1%]"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
-                      referrerPolicy="strict-origin-when-cross-origin"
                     />
                   </div>
 
@@ -580,39 +579,20 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                   {/* Clean Bottom Overlay Bar: Unmute, Viewers, Fullscreen */}
                   <div className="absolute bottom-0 inset-x-0 z-20 p-2.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-between pointer-events-auto">
                     
-                    {/* Controles de Reproducción y Audio */}
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={toggleMute}
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border shadow-lg backdrop-blur-md transition-all cursor-pointer ${
-                          isMuted
-                            ? 'bg-amber-600/95 hover:bg-amber-500 text-white border-amber-400/40 animate-pulse hover:animate-none'
-                            : 'bg-black/75 hover:bg-black/90 text-stone-200 border-white/20'
-                        }`}
-                        title={isMuted ? "Activar audio" : "Silenciar audio"}
-                      >
-                        {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                        <span>{isMuted ? "Activar Sonido" : "Sonido Activo"}</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (iframeRef.current?.contentWindow) {
-                            iframeRef.current.contentWindow.postMessage(
-                              JSON.stringify({ event: 'command', func: 'playVideo', args: [] }),
-                              '*'
-                            );
-                          }
-                        }}
-                        className="px-2.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 bg-black/75 hover:bg-black/90 text-stone-200 border border-white/20 transition-all cursor-pointer"
-                        title="Reanudar señal en directo"
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="hidden sm:inline">Sintonizar</span>
-                      </button>
-                    </div>
+                    {/* Single Unified Audio Toggle */}
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border shadow-lg backdrop-blur-md transition-all cursor-pointer ${
+                        isMuted
+                          ? 'bg-amber-600/95 hover:bg-amber-500 text-white border-amber-400/40 animate-pulse hover:animate-none'
+                          : 'bg-black/75 hover:bg-black/90 text-stone-200 border-white/20'
+                      }`}
+                      title={isMuted ? "Activar audio" : "Silenciar audio"}
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                      <span>{isMuted ? "Activar Sonido" : "Sonido Activo"}</span>
+                    </button>
 
                     {/* Viewers & Fullscreen */}
                     <div className="flex items-center gap-2">
