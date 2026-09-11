@@ -1,6 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, Unlock, Play, Pause, Volume2, VolumeX, Maximize, Minimize, MessageSquare, Flame, Heart, Flower2, Share2, Send, Clock, MapPin, Sparkles, AlertCircle, CheckCircle2, User, ChevronRight, X } from 'lucide-react';
+import { 
+  Lock, 
+  Unlock, 
+  Volume2, 
+  VolumeX, 
+  Maximize, 
+  Minimize, 
+  MessageSquare, 
+  Flame, 
+  Heart, 
+  Flower2, 
+  Send, 
+  Clock, 
+  MapPin, 
+  Sparkles, 
+  CheckCircle2, 
+  ShieldCheck,
+  X 
+} from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { FloatingCandleEmbers } from '../effects/FloatingCandleEmbers';
 
@@ -16,6 +34,7 @@ interface LiveCondolenceItem {
 
 interface VirtualWakeRoomProps {
   onClose?: () => void;
+  hideHeader?: boolean;
   serviceData?: {
     id: string;
     deceasedName: string;
@@ -31,6 +50,21 @@ interface VirtualWakeRoomProps {
     streamUrl?: string;
   };
 }
+
+export interface TributeThemeInfo {
+  id: 'candle' | 'flower' | 'prayer' | 'heart';
+  label: string;
+  name: string;
+  emoji: string;
+  accentBorder: string;
+}
+
+export const TRIBUTES: TributeThemeInfo[] = [
+  { id: 'candle', label: 'Vela', name: 'Vela Encendida', emoji: '🕯️', accentBorder: 'border-l-amber-500' },
+  { id: 'flower', label: 'Flores', name: 'Ofrenda Floral', emoji: '🌸', accentBorder: 'border-l-rose-400' },
+  { id: 'prayer', label: 'Oración', name: 'Oración', emoji: '🕊️', accentBorder: 'border-l-sky-400' },
+  { id: 'heart', label: 'Abrazo', name: 'Abrazo Fraterno', emoji: '🤍', accentBorder: 'border-l-stone-400' },
+];
 
 // Extrae el ID de video de cualquier formato de URL de YouTube (live, watch, youtu.be, embed o ID directo)
 export function getYouTubeId(url?: string): string | null {
@@ -48,6 +82,7 @@ export function getYouTubeId(url?: string): string | null {
 
 export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
   onClose,
+  hideHeader = false,
   serviceData = {
     id: 'demo-sepelio-1',
     deceasedName: 'Don Roberto Ernesto Figueroa',
@@ -69,7 +104,6 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
   const [pinError, setPinError] = useState(false);
 
   // Streaming player state
-  const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(true);
   const [viewerCount, setViewerCount] = useState(18);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -81,22 +115,24 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
 
   const youtubeId = getYouTubeId(serviceData.streamUrl);
 
+  // Connection sequence (3.8s duration)
   const startConnectionSequence = () => {
     setIsAuthenticated(true);
     setIsConnecting(true);
     setConnectionPhase(1);
 
-    setTimeout(() => {
+    const phase2Timer = setTimeout(() => {
       setConnectionPhase(2);
     }, 1800);
 
-    setTimeout(() => {
-      setConnectionPhase(3);
+    const finishTimer = setTimeout(() => {
+      setIsConnecting(false);
     }, 3800);
 
-    setTimeout(() => {
-      setIsConnecting(false);
-    }, 5400);
+    return () => {
+      clearTimeout(phase2Timer);
+      clearTimeout(finishTimer);
+    };
   };
 
   useEffect(() => {
@@ -107,21 +143,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
-  const togglePlay = () => {
-    const next = !isPlaying;
-    setIsPlaying(next);
-    if (youtubeId && iframeRef.current?.contentWindow) {
-      iframeRef.current.contentWindow.postMessage(
-        JSON.stringify({
-          event: 'command',
-          func: next ? 'playVideo' : 'pauseVideo',
-          args: []
-        }),
-        '*'
-      );
-    }
-  };
-
+  // Mute / Unmute via YouTube JS API
   const toggleMute = () => {
     const next = !isMuted;
     setIsMuted(next);
@@ -147,6 +169,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     }
   };
 
+  // Fullscreen toggle on the video container
   const toggleFullscreen = () => {
     if (!videoContainerRef.current) return;
     if (!document.fullscreenElement) {
@@ -161,6 +184,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
   const [senderCity, setSenderCity] = useState('');
   const [messageText, setMessageText] = useState('');
   const [selectedTribute, setSelectedTribute] = useState<'candle' | 'flower' | 'prayer' | 'heart'>('candle');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'candle' | 'flower' | 'prayer' | 'heart'>('all');
   const [litCandleSuccess, setLitCandleSuccess] = useState(false);
 
   const [condolencesList, setCondolencesList] = useState<LiveCondolenceItem[]>([
@@ -177,7 +201,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
       id: 'c-2',
       senderName: 'Dra. Silvina Navarro',
       senderCity: 'Córdoba',
-      message: 'Elevamos una oración por el descanso de nuestro querido profesor Don Roberto.',
+      message: 'Elevamos una sentida oración por el eterno descanso de nuestro querido profesor Don Roberto.',
       candleLit: true,
       tributeType: 'prayer',
       timestamp: 'Hace 12 min'
@@ -186,10 +210,19 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
       id: 'c-3',
       senderName: 'Esteban y Gabriela',
       senderCity: 'Buenos Aires',
-      message: 'Siempre recordaremos su generosidad y sonrisa. Descansa en paz.',
+      message: 'Siempre recordaremos su generosidad y calidez. Nuestras más sinceras condolencias.',
       candleLit: true,
       tributeType: 'flower',
       timestamp: 'Hace 25 min'
+    },
+    {
+      id: 'c-4',
+      senderName: 'Amigos del Ferrocarril',
+      senderCity: 'Joaquín V. González',
+      message: 'Un gran amigo, trabajador incansable y ejemplo para el pueblo. Descansa en paz, Don Roberto.',
+      candleLit: true,
+      tributeType: 'heart',
+      timestamp: 'Hace 45 min'
     }
   ]);
 
@@ -206,7 +239,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     }
   };
 
-  // Handle sending new live condolence
+  // Handle sending new live condolence / tribute
   const handleSendCondolence = (e: React.FormEvent) => {
     e.preventDefault();
     if (!senderName.trim() || !messageText.trim()) return;
@@ -214,84 +247,79 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     const newItem: LiveCondolenceItem = {
       id: `live-${Date.now()}`,
       senderName: senderName.trim(),
-      senderCity: senderCity.trim() || 'Familiar / Amigo',
+      senderCity: senderCity.trim() || 'Familiar / Allegado',
       message: messageText.trim(),
-      candleLit: true,
+      candleLit: selectedTribute === 'candle',
       tributeType: selectedTribute,
       timestamp: 'Ahora'
     };
 
     setCondolencesList(prev => [newItem, ...prev]);
     setMessageText('');
+    setSelectedFilter('all');
     setLitCandleSuccess(true);
     setTimeout(() => setLitCandleSuccess(false), 3500);
+
+    // Auto scroll chat to top
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   return (
-    <div className={`relative min-h-[600px] w-full rounded-3xl overflow-hidden border ${
-      isDark ? 'bg-stone-950 text-stone-100 border-stone-800' : 'bg-white text-stone-900 border-stone-200 shadow-2xl'
-    } flex flex-col`}>
+    <div className="relative w-full h-full flex-1 overflow-hidden bg-stone-950 text-stone-100 flex flex-col">
       
-      {/* Top Header Strip */}
-      <div className={`p-4 sm:p-5 border-b ${
-        isDark ? 'bg-stone-900/90 border-stone-800' : 'bg-stone-100/90 border-stone-200'
-      } backdrop-blur-md flex items-center justify-between gap-3`}>
-        <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-red-500 animate-ping" />
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-red-500 font-mono">
-                EN VIVO • SALA VIRTUAL
-              </span>
-              <span className={`text-[11px] px-2 py-0.2 rounded-full border ${
-                isDark ? 'bg-stone-800 border-stone-700 text-stone-300' : 'bg-white border-stone-300 text-stone-700'
-              }`}>
-                {serviceData.branchName}
-              </span>
-            </div>
-            <h3 className="font-serif font-bold text-base sm:text-lg">
-              Homenaje en Memoria de {serviceData.deceasedName}
-            </h3>
+      {/* Top Header Strip (se muestra solo si no se oculta por el contenedor maestro) */}
+      {!hideHeader && (
+        <div className="p-3 sm:p-3.5 border-b border-stone-800 bg-stone-900 flex items-center justify-between gap-3 flex-shrink-0">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600/20 border border-red-500/30 text-red-400 text-xs font-bold font-mono tracking-wider">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              EN DIRECTO • SALA VIRTUAL
+            </span>
+            <span className="hidden sm:inline-block text-xs text-stone-400">
+              {serviceData.branchName}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="hidden md:inline-flex items-center gap-1 text-xs text-stone-400 font-mono">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
+              Transmisión Encriptada
+            </span>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="p-1.5 rounded-xl border border-stone-750 bg-stone-800 hover:bg-stone-700 text-stone-300 transition-colors cursor-pointer"
+                aria-label="Cerrar sala virtual"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
-
-        <div className="flex items-center gap-2">
-          {onClose && (
-            <button
-              onClick={onClose}
-              className={`p-2 rounded-xl border ${
-                isDark ? 'bg-stone-850 hover:bg-stone-800 border-stone-700 text-stone-300' : 'bg-white hover:bg-stone-100 border-stone-300 text-stone-700'
-              } transition-colors`}
-              aria-label="Cerrar sala virtual"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-      </div>
+      )}
 
       {/* Screen 1: PIN Access Gate if not authenticated */}
       {!isAuthenticated ? (
-        <div className="relative flex-1 p-6 sm:p-12 flex items-center justify-center">
+        <div className="relative flex-1 w-full h-full p-6 sm:p-12 flex items-center justify-center overflow-y-auto bg-stone-950">
           <FloatingCandleEmbers />
           
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
-            className={`relative max-w-md w-full p-6 sm:p-8 rounded-2xl border ${
-              isDark ? 'bg-stone-900/95 border-stone-800' : 'bg-white/95 border-stone-200 shadow-2xl'
-            } backdrop-blur-md text-center space-y-5 z-10`}
+            className="relative max-w-md w-full p-6 sm:p-8 rounded-2xl border border-stone-800 bg-stone-900 text-stone-100 shadow-2xl text-center space-y-5 z-10"
           >
             <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center mx-auto text-amber-500">
               <Lock className="w-6 h-6" />
             </div>
 
-            <div>
-              <h4 className="font-serif font-bold text-xl sm:text-2xl mb-1">
+            <div className="space-y-1.5">
+              <h4 className="font-serif font-bold text-xl sm:text-2xl text-stone-100">
                 Acceso Privado Familiar
               </h4>
-              <p className={`text-xs sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'} leading-relaxed`}>
-                Por respeto a la privacidad de la familia, ingrese el <strong>PIN de 4 dígitos</strong> brindado por los deudos para ver el velatorio en vivo.
+              <p className="text-xs sm:text-sm text-stone-400 leading-relaxed">
+                Por respeto a la intimidad de los deudos, ingrese el <strong>PIN de 4 dígitos</strong> proporcionado para presenciar el velatorio en vivo.
               </p>
             </div>
 
@@ -311,7 +339,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                     className={`w-full text-center text-2xl font-mono font-bold tracking-wider py-3 px-3 rounded-xl border ${
                       pinError
                         ? 'border-red-500 bg-red-500/10 text-red-400'
-                        : isDark ? 'bg-stone-950 border-stone-750 text-amber-400' : 'bg-stone-50 border-stone-300 text-amber-700'
+                        : 'bg-stone-950 border-stone-750 text-amber-400'
                     } focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-inner`}
                   />
                 </div>
@@ -338,21 +366,21 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                     setPinError(false);
                     startConnectionSequence();
                   }}
-                  className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 font-medium hover:underline transition-colors flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
+                  className="text-xs text-amber-400 hover:text-amber-300 font-medium hover:underline transition-colors flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
                 >
                   <span>🔑 Ingresar con PIN de prueba ({serviceData.accessPin || '8492'})</span>
                 </button>
               </div>
             </form>
 
-            <div className="pt-2 text-[11px] text-stone-500">
+            <div className="pt-2 text-[11px] text-stone-500 border-t border-stone-800">
               Cochería J.V. González • Sala Virtual Segura & Encriptada
             </div>
           </motion.div>
         </div>
       ) : (
-        /* Screen 2: Authenticated Live Stream + Realtime Condolences */
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-hidden relative">
+        /* Screen 2: Authenticated Live Stream + Realtime Condolences (NO SCROLL TOTAL en Desktop) */
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-0 overflow-y-auto lg:overflow-hidden relative h-full bg-stone-950">
           
           {/* Pantalla de Carga Solemne que oculta el video mientras se inicializa por detrás */}
           <AnimatePresence>
@@ -361,7 +389,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 key="connecting-screen"
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 0.8, ease: 'easeInOut' }}
+                transition={{ duration: 0.6, ease: 'easeInOut' }}
                 className="absolute inset-0 z-40 bg-stone-950 flex flex-col items-center justify-center p-6 sm:p-10 text-center select-none"
               >
                 <FloatingCandleEmbers />
@@ -369,8 +397,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 <div className="relative z-10 space-y-5 max-w-md w-full">
                   {/* Memorial photo */}
                   <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28">
-                    <div className="absolute inset-0 rounded-full bg-amber-600/20 animate-ping opacity-60" />
-                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-amber-600/60 shadow-2xl relative z-10">
+                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-amber-600/50 shadow-2xl relative z-10">
                       <img
                         src={serviceData.photoUrl}
                         alt={serviceData.deceasedName}
@@ -396,7 +423,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                   </div>
 
                   {/* Dynamic Status messages */}
-                  <div className="space-y-3 pt-2">
+                  <div className="space-y-3 pt-1">
                     <div className="h-6 flex items-center justify-center">
                       <motion.p
                         key={connectionPhase}
@@ -406,8 +433,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                         className="text-xs sm:text-sm text-stone-300 font-medium"
                       >
                         {connectionPhase === 1 && "🔑 Verificando credencial familiar..."}
-                        {connectionPhase === 2 && "📡 Conectando y sincronizando señal de la Capilla Ardiente..."}
-                        {connectionPhase === 3 && "✨ Transmisión en vivo establecida. Ingresando a la sala..."}
+                        {connectionPhase === 2 && "📡 Conectando señal en directo desde la Capilla..."}
                       </motion.p>
                     </div>
 
@@ -416,14 +442,14 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                       <motion.div
                         initial={{ width: '5%' }}
                         animate={{ width: '100%' }}
-                        transition={{ duration: 5.4, ease: 'easeInOut' }}
+                        transition={{ duration: 3.8, ease: 'easeInOut' }}
                         className="h-full bg-gradient-to-r from-amber-700 via-amber-400 to-amber-500"
                       />
                     </div>
 
                     <div className="flex items-center justify-center gap-2 text-[11px] text-stone-500 font-mono">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Cochería J.V. González • Conexión Segura Encriptada</span>
+                      <span>Cochería J.V. González • Conexión Segura</span>
                     </div>
                   </div>
                 </div>
@@ -431,207 +457,195 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
             )}
           </AnimatePresence>
 
-          {/* Main Video Stream Container (8 Columns on Desktop) */}
-          <div
-            ref={videoContainerRef}
-            className="lg:col-span-8 bg-black flex flex-col justify-between relative overflow-hidden min-h-[350px] sm:min-h-[460px]"
-          >
-            {youtubeId ? (
-              /* Real Live Stream Feed via YouTube Embed (CCTV Broadcast Mode, completely hiding YouTube controls) */
-              <div className="absolute inset-0 bg-black overflow-hidden flex items-center justify-center select-none">
-                {/* 
-                  Zoom y recorte perimetral de un 14% con overflow-hidden y pointer-events-none:
-                  Elimina por completo la barra superior con título, botón compartir, marcas de agua y controles de YouTube,
-                  dejando únicamente la señal de cámara pura y respetuosa.
-                */}
-                <div className={`relative w-full h-full overflow-hidden flex items-center justify-center pointer-events-none transition-opacity duration-700 ${isConnecting ? 'opacity-0' : 'opacity-100'}`}>
-                  <iframe
-                    ref={iframeRef}
-                    src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1`}
-                    title="Transmisión en Vivo de Capilla Ardiente"
-                    className="w-[114%] h-[114%] max-w-none border-0 pointer-events-none select-none -translate-y-[1%]"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                  />
-                </div>
-
-                {/* Floating Institutional Live Badge */}
-                <div className="absolute top-4 left-4 z-20 pointer-events-none flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-bold font-mono tracking-wider shadow-lg flex items-center gap-1.5 backdrop-blur-xs">
-                    <span className="w-2 h-2 rounded-full bg-white animate-ping" />
-                    EN DIRECTO DESDE CAPILLA ARDIENTE
-                  </span>
-                  <span className="hidden sm:inline-flex px-2 py-0.5 rounded-full bg-black/70 border border-white/20 text-stone-200 text-[10px] backdrop-blur-xs">
-                    {serviceData.chapelRoom}
-                  </span>
-                </div>
-
-                {/* Floating Quick Unmute Pill when muted */}
-                {isMuted && !isConnecting && (
-                  <button
-                    type="button"
-                    onClick={toggleMute}
-                    className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 px-4 py-2 rounded-full bg-black/85 hover:bg-black text-amber-300 hover:text-amber-200 border border-amber-500/40 shadow-2xl backdrop-blur-md flex items-center gap-2 text-xs font-medium transition-all hover:scale-105 cursor-pointer pointer-events-auto"
-                  >
-                    <VolumeX className="w-4 h-4 text-amber-400 animate-pulse" />
-                    <span>Audio silenciado • Clic para activar sonido</span>
-                  </button>
-                )}
-              </div>
-            ) : (
-              /* Simulated Live Stream Feed (With respectful ambiance) */
-              <div className="absolute inset-0 flex items-center justify-center">
-                {/* Background ambient lighting */}
-                <div className="absolute inset-0 bg-radial-at-c from-stone-900 via-black to-black opacity-90" />
-                
-                {/* Simulated Chapel Altar & Candle Live View */}
-                <div className="relative text-center p-6 space-y-4 max-w-lg z-10">
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-amber-600/50 shadow-2xl mx-auto">
-                    <img
-                      src={serviceData.photoUrl}
-                      alt={serviceData.deceasedName}
-                      className="w-full h-full object-cover filter grayscale contrast-105"
+          {/* Main Column (8 Columns on Desktop): Live Video + Ficha del Homenaje */}
+          <div className="lg:col-span-8 flex flex-col h-auto lg:h-full overflow-hidden border-b lg:border-b-0 lg:border-r border-stone-800 bg-stone-950">
+            
+            {/* Cinematic 16:9 Video Container (flex-1 min-h-0 en desktop para que NO empuje ni haga scroll) */}
+            <div
+              ref={videoContainerRef}
+              className="relative w-full aspect-video lg:aspect-auto lg:flex-1 lg:min-h-0 bg-black overflow-hidden flex items-center justify-center select-none"
+            >
+              {youtubeId ? (
+                <div className="absolute inset-0 bg-black overflow-hidden flex items-center justify-center">
+                  {/* YouTube Embed without UI, cropped perimetrally */}
+                  <div className={`relative w-full h-full overflow-hidden flex items-center justify-center pointer-events-none transition-opacity duration-700 ${isConnecting ? 'opacity-0' : 'opacity-100'}`}>
+                    <iframe
+                      ref={iframeRef}
+                      src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&controls=0&disablekb=1&fs=0&rel=0&modestbranding=1&iv_load_policy=3&playsinline=1&enablejsapi=1`}
+                      title="Transmisión en Vivo de Capilla Ardiente"
+                      className="w-[114%] h-[114%] max-w-none border-0 pointer-events-none select-none -translate-y-[1%]"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <h4 className="text-white font-serif font-bold text-lg sm:text-xl tracking-wide">
-                      {serviceData.deceasedName}
-                    </h4>
-                    <p className="text-amber-300 text-xs font-mono">
-                      {serviceData.birthYear} — {serviceData.passedYear} ({serviceData.age} años)
-                    </p>
-                    <p className="text-stone-400 text-xs italic pt-1">
-                      "{serviceData.chapelRoom} • {serviceData.branchName}"
-                    </p>
+                  {/* Clean Top-Left Live Badge */}
+                  <div className="absolute top-3 left-3 z-20 pointer-events-none flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-full bg-red-600/90 text-white text-[11px] font-bold font-mono tracking-wider shadow-lg flex items-center gap-1.5 backdrop-blur-xs">
+                      <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+                      EN DIRECTO • CAPILLA ARDIENTE
+                    </span>
                   </div>
 
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/60 border border-stone-800 text-stone-300 text-xs">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    <span>Transmisión en directo activa desde la sala</span>
+                  {/* Clean Bottom Overlay Bar: Unmute, Viewers, Fullscreen */}
+                  <div className="absolute bottom-0 inset-x-0 z-20 p-2.5 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex items-center justify-between pointer-events-auto">
+                    
+                    {/* Single Unified Audio Toggle */}
+                    <button
+                      type="button"
+                      onClick={toggleMute}
+                      className={`px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 border shadow-lg backdrop-blur-md transition-all cursor-pointer ${
+                        isMuted
+                          ? 'bg-amber-600/95 hover:bg-amber-500 text-white border-amber-400/40 animate-pulse hover:animate-none'
+                          : 'bg-black/75 hover:bg-black/90 text-stone-200 border-white/20'
+                      }`}
+                      title={isMuted ? "Activar audio" : "Silenciar audio"}
+                    >
+                      {isMuted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
+                      <span>{isMuted ? "Activar Sonido" : "Sonido Activo"}</span>
+                    </button>
+
+                    {/* Viewers & Fullscreen */}
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1.5 text-[11px] bg-black/70 border border-white/15 text-stone-200 font-mono px-2.5 py-1 rounded-full backdrop-blur-xs">
+                        <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                        {viewerCount} en línea
+                      </span>
+
+                      <button
+                        type="button"
+                        onClick={toggleFullscreen}
+                        className="p-1.5 rounded-full bg-black/70 border border-white/15 hover:bg-white/20 text-stone-200 hover:text-white transition-colors cursor-pointer"
+                        title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+                      >
+                        {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              ) : (
+                /* Fallback Simulated Altar */
+                <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
+                  <div className="relative z-10 space-y-3 max-w-sm">
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-600/50 shadow-xl mx-auto">
+                      <img src={serviceData.photoUrl} alt={serviceData.deceasedName} className="w-full h-full object-cover filter grayscale" />
+                    </div>
+                    <div>
+                      <h4 className="text-white font-serif font-bold text-base">{serviceData.deceasedName}</h4>
+                      <p className="text-stone-400 text-xs italic">{serviceData.chapelRoom}</p>
+                    </div>
+                  </div>
+                  <FloatingCandleEmbers />
+                </div>
+              )}
+            </div>
+
+            {/* Ficha Institucional Compacta en Barra Horizontal (Visibilidad directa SIN scroll) */}
+            <div className="h-18 sm:h-20 flex-shrink-0 bg-stone-900 border-t border-stone-800 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 select-none">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-amber-500/60 shadow-sm flex-shrink-0">
+                  <img
+                    src={serviceData.photoUrl}
+                    alt={serviceData.deceasedName}
+                    className="w-full h-full object-cover filter grayscale contrast-105"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="font-serif font-bold text-sm sm:text-base text-stone-100 truncate">
+                    {serviceData.deceasedName}
+                  </h3>
+                  <p className="text-xs text-amber-400 font-mono">
+                    {serviceData.birthYear} — {serviceData.passedYear} ({serviceData.age} años)
+                  </p>
+                </div>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-5 text-xs text-stone-300">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <div>
+                    <div className="font-semibold text-stone-200">{serviceData.chapelRoom}</div>
+                    <div className="text-[11px] text-stone-400">{serviceData.branchName}</div>
                   </div>
                 </div>
 
-                {/* Floating gentle candle embers in live feed */}
-                <FloatingCandleEmbers />
-              </div>
-            )}
-
-            {/* Video Overlay Controls (Custom Institutional Controls) */}
-            <div className="relative z-20 p-4 bg-gradient-to-t from-black/95 via-black/50 to-transparent flex items-center justify-between text-white text-xs mt-auto pointer-events-auto">
-              <div className="flex items-center gap-2.5">
-                <button
-                  type="button"
-                  onClick={togglePlay}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-stone-200 hover:text-white"
-                  title={isPlaying ? "Pausar transmisión" : "Reanudar transmisión"}
-                >
-                  {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 text-amber-400" />}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={toggleMute}
-                  className={`px-3 py-1.5 rounded-xl border transition-colors flex items-center gap-2 text-xs font-medium ${
-                    isMuted
-                      ? 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25'
-                      : 'bg-white/10 border-white/15 text-stone-200 hover:bg-white/20'
-                  }`}
-                  title={isMuted ? "Activar audio" : "Silenciar"}
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 text-amber-400" /> : <Volume2 className="w-4 h-4 text-emerald-400" />}
-                  <span>{isMuted ? "Activar audio" : "Audio activo"}</span>
-                </button>
-
-                <div className="hidden sm:flex items-center gap-1.5 font-mono text-[11px] text-stone-400 pl-1">
-                  <Clock className="w-3.5 h-3.5 text-amber-400" />
-                  <span>{serviceData.cortegeTime}</span>
+                <div className="flex items-center gap-2 border-l border-stone-800 pl-5">
+                  <Clock className="w-3.5 h-3.5 text-amber-400 flex-shrink-0" />
+                  <div>
+                    <div className="font-semibold text-amber-300">Cortejo y Sepelio</div>
+                    <div className="text-[11px] text-stone-400">{serviceData.cortegeTime}</div>
+                  </div>
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="flex items-center gap-1.5 text-[11px] bg-red-600/90 text-white font-bold px-2.5 py-1 rounded-lg font-mono shadow">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                  {viewerCount} online
-                </span>
-
-                <button
-                  type="button"
-                  onClick={toggleFullscreen}
-                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 transition-colors text-stone-200 hover:text-white"
-                  title={isFullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
-                >
-                  {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-                </button>
               </div>
             </div>
 
           </div>
 
-          {/* Live Condolences & Candle Lighting Sidebar (4 Columns on Desktop) */}
-          <div className={`lg:col-span-4 flex flex-col h-full border-l ${
-            isDark ? 'bg-stone-900 border-stone-800' : 'bg-stone-50 border-stone-200'
-          }`}>
+          {/* Sidebar Column (4 Columns on Desktop): Live Tributes & Condolences */}
+          <div className="lg:col-span-4 flex flex-col min-h-[480px] lg:min-h-0 lg:h-full overflow-hidden bg-stone-900 border-l-0 lg:border-l border-stone-800">
             
             {/* Sidebar Header */}
-            <div className={`p-3.5 border-b ${isDark ? 'border-stone-800 bg-stone-850' : 'border-stone-200 bg-white'} flex items-center justify-between`}>
+            <div className="h-12 border-b border-stone-800 bg-stone-900 px-4 flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2">
-                <MessageSquare className="w-4 h-4 text-amber-600" />
-                <h4 className="font-semibold text-xs uppercase tracking-wider">
-                  Condolencias en Vivo
+                <MessageSquare className="w-4 h-4 text-amber-500" />
+                <h4 className="font-serif font-bold text-sm text-stone-100 tracking-wide">
+                  Libro de Condolencias
                 </h4>
               </div>
-              <span className="text-[11px] text-stone-500 font-mono">
+
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-xs font-semibold">
                 {condolencesList.length} mensajes
               </span>
             </div>
 
-            {/* Condolences Feed (Scrollable) */}
+            {/* Condolences Feed (Scroll solo en el muro interno) */}
             <div
               ref={chatContainerRef}
-              className="flex-1 overflow-y-auto p-3.5 space-y-3 max-h-[380px] sm:max-h-[420px]"
+              className="flex-1 overflow-y-auto p-3 space-y-2.5 min-h-0"
             >
-              {condolencesList.map((item) => (
-                <motion.div
-                  key={item.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-xl border text-xs space-y-1 ${
-                    isDark ? 'bg-stone-850/80 border-stone-800' : 'bg-white border-stone-200 shadow-xs'
-                  }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <strong className="text-amber-600 dark:text-amber-400 font-semibold truncate max-w-[180px]">
-                      {item.senderName}
-                    </strong>
-                    <span className="text-[10px] text-stone-400 font-mono">
-                      {item.timestamp}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-1 text-[10px] text-stone-500">
-                    <MapPin className="w-2.5 h-2.5" />
-                    <span>{item.senderCity}</span>
-                    {item.candleLit && (
-                      <span className="ml-1 text-amber-500 flex items-center gap-0.5">
-                        • 🕯️ Vela
+              {condolencesList.map((item) => {
+                const theme = TRIBUTES.find(t => t.id === item.tributeType) || TRIBUTES[0];
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-3 rounded-xl border border-stone-800 bg-stone-850 border-l-4 ${theme.accentBorder} space-y-1.5 shadow-xs`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-sm font-serif font-bold text-white truncate">
+                        {item.senderName}
+                      </strong>
+                      <span className="text-[11px] text-stone-400 font-mono flex-shrink-0">
+                        {item.timestamp}
                       </span>
-                    )}
-                  </div>
+                    </div>
 
-                  <p className={`pt-1 leading-relaxed ${isDark ? 'text-stone-300' : 'text-stone-700'}`}>
-                    "{item.message}"
-                  </p>
-                </motion.div>
-              ))}
+                    <p className="text-xs sm:text-sm leading-relaxed text-stone-200 antialiased">
+                      "{item.message}"
+                    </p>
+
+                    <div className="flex items-center gap-1 text-[11px] text-stone-400 pt-0.5">
+                      <MapPin className="w-3 h-3 text-stone-500 flex-shrink-0" />
+                      <span className="truncate">{item.senderCity}</span>
+                      <span className="ml-auto text-[11px] font-medium text-amber-400">
+                        {theme.emoji} {theme.name}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Send Condolence & Tribute Form */}
-            <div className={`p-3.5 border-t ${isDark ? 'border-stone-800 bg-stone-850' : 'border-stone-200 bg-white'} space-y-2.5`}>
+            {/* Formulario Simple de Condolencias (Sin marear al usuario) */}
+            <div className="p-3 border-t border-stone-800 bg-stone-900 flex-shrink-0 space-y-2">
+              
+              {/* Notificación de Éxito */}
               {litCandleSuccess && (
-                <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-1.5 animate-in fade-in">
-                  <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
-                  <span>Su condolencia y vela han sido encendidas en la transmisión.</span>
+                <div className="p-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-medium flex items-center gap-1.5 animate-in fade-in">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                  <span>Su condolencia ha sido publicada con éxito.</span>
                 </div>
               )}
 
@@ -643,44 +657,36 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                     placeholder="Su Nombre / Familia"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
-                    className={`px-2.5 py-1.5 text-xs rounded-lg border ${
-                      isDark ? 'bg-stone-900 border-stone-750 text-white' : 'bg-stone-50 border-stone-300 text-stone-900'
-                    } focus:outline-none focus:ring-1 focus:ring-amber-500`}
+                    className="px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-stone-700 bg-stone-950 text-white placeholder-stone-400 focus:outline-none focus:border-amber-500"
                   />
                   <input
                     type="text"
                     placeholder="Ciudad (Ej: Salta)"
                     value={senderCity}
                     onChange={(e) => setSenderCity(e.target.value)}
-                    className={`px-2.5 py-1.5 text-xs rounded-lg border ${
-                      isDark ? 'bg-stone-900 border-stone-750 text-white' : 'bg-stone-50 border-stone-300 text-stone-900'
-                    } focus:outline-none focus:ring-1 focus:ring-amber-500`}
+                    className="px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-stone-700 bg-stone-950 text-white placeholder-stone-400 focus:outline-none focus:border-amber-500"
                   />
                 </div>
 
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Escriba sus palabras de condolencia..."
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    className={`flex-1 px-3 py-1.5 text-xs rounded-lg border ${
-                      isDark ? 'bg-stone-900 border-stone-750 text-white' : 'bg-stone-50 border-stone-300 text-stone-900'
-                    } focus:outline-none focus:ring-1 focus:ring-amber-500`}
-                  />
-                  <button
-                    type="submit"
-                    className="px-3 py-1.5 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-xs font-semibold flex items-center gap-1 shadow-xs"
-                    title="Enviar condolencia y encender vela"
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                    <span>Enviar</span>
-                  </button>
-                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Escriba sus palabras de condolencia..."
+                  value={messageText}
+                  onChange={(e) => setMessageText(e.target.value)}
+                  className="w-full px-2.5 py-2 text-xs sm:text-sm rounded-lg border border-stone-700 bg-stone-950 text-white placeholder-stone-400 focus:outline-none focus:border-amber-500"
+                />
+
+                {/* Botón Claro y Directo */}
+                <button
+                  type="submit"
+                  className="w-full py-2 rounded-lg bg-amber-700 hover:bg-amber-600 text-white text-xs sm:text-sm font-semibold flex items-center justify-center gap-1.5 shadow-sm transition-colors cursor-pointer"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>🕯️ Encender Vela y Enviar Condolencias</span>
+                </button>
               </form>
             </div>
-
           </div>
 
         </div>

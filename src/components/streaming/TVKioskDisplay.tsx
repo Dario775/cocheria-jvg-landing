@@ -61,7 +61,7 @@ export const TVKioskDisplay: React.FC<TVKioskDisplayProps> = ({
   }, []);
 
   return (
-    <div className="relative w-full min-h-[550px] sm:min-h-[650px] bg-black text-white rounded-3xl overflow-hidden border border-stone-800 shadow-2xl flex flex-col justify-between font-sans select-none">
+    <div className="relative w-full h-full min-h-[550px] bg-black text-white rounded-2xl overflow-hidden border border-stone-800 shadow-2xl flex flex-col justify-between font-sans select-none">
       
       {/* Top TV Bar: Institutional Header & Realtime Clock */}
       <div className="relative z-20 p-5 sm:p-7 bg-gradient-to-b from-black/95 via-black/60 to-transparent flex items-center justify-between">
