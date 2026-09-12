@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Obituary, CondolenceMessage, MemorialTribute } from '../types';
-import { X, Flame, Heart, Flower2, Share2, MapPin, Clock, Calendar, MessageSquareHeart, Check, Copy, Send, Sparkles, User, ShieldAlert } from 'lucide-react';
+import { X, Flame, Heart, Flower2, Share2, MapPin, Clock, Calendar, MessageSquareHeart, Check, Copy, Send, Sparkles, User, ShieldAlert, ExternalLink } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { ShareObituaryButton } from './ShareObituaryButton';
 import { shareObituary } from '../utils/shareUtils';
@@ -225,6 +225,35 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Banner Capilla Ardiente Virtual cuando está en velación activa */}
+          {isEnVelacion && (
+            <div className={`mt-5 p-4 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 text-left ${
+              isDark 
+                ? 'bg-amber-950/30 border-amber-800/50 text-amber-200' 
+                : 'bg-amber-50 border-amber-300 text-amber-900'
+            }`}>
+              <div className="flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping flex-shrink-0" />
+                <div className="text-xs">
+                  <strong className="block font-semibold">Capilla Ardiente Virtual & Homenajes en Vivo</strong>
+                  <span className={isDark ? 'text-stone-400' : 'text-stone-600'}>
+                    Acompañe a la familia a la distancia, vea la transmisión o encienda una vela en sala.
+                  </span>
+                </div>
+              </div>
+
+              <a
+                href={`/velatorio/${obituary.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs tracking-wide transition-all shadow-md flex-shrink-0"
+              >
+                <span>Ingresar a Capilla Virtual</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          )}
 
           {/* Quick Tribute Action Bar */}
           <div className={`mt-6 pt-5 border-t ${

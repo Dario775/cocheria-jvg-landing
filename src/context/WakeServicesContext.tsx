@@ -25,6 +25,7 @@ interface WakeServicesContextType {
   updateWakeService: (id: string, updates: Partial<WakeService>) => void;
   deleteWakeService: (id: string) => void;
   setWakeStatus: (id: string, status: 'preparacion' | 'en_vivo' | 'finalizado') => void;
+  lightWakeCandle: (wakeId: string) => Promise<void>;
   createTVDevice: (data: { deviceCode: string; roomName: string; branchName: string }) => Promise<void>;
   deleteTVDevice: (deviceCode: string) => Promise<void>;
   toggleTVMode: (deviceCode: string) => void;
@@ -355,6 +356,18 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }));
   };
 
+  // Light wake candle
+  const lightWakeCandle = async (wakeId: string) => {
+    setWakeServices(prev => prev.map(s => {
+      if (s.id === wakeId) {
+        const nextCount = (s.candlesCount || 0) + 1;
+        supabase.from('wake_services').update({ candles_count: nextCount }).eq('id', wakeId).then(() => {}).catch(() => {});
+        return { ...s, candlesCount: nextCount };
+      }
+      return s;
+    }));
+  };
+
   // Toggle TV mode
   const toggleTVMode = (deviceCode: string) => {
     setTvDevices(prev => prev.map(tv => {
@@ -520,6 +533,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
         updateWakeService,
         deleteWakeService,
         setWakeStatus,
+        lightWakeCandle,
         createTVDevice,
         deleteTVDevice,
         toggleTVMode,

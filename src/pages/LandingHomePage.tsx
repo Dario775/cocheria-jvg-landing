@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OBITUARIES_DATA } from '../data/mockData';
-import { Obituary, CondolenceMessage, MemorialTribute } from '../types';
+import { Obituary, CondolenceMessage, MemorialTribute, WakeService } from '../types';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
 import { RegionalBranchesSection } from '../components/RegionalBranchesSection';
@@ -18,15 +18,68 @@ import { ParallaxQuoteSection } from '../components/effects/ParallaxQuoteSection
 import { useTheme } from '../context/ThemeContext';
 import { useWakeServices } from '../context/WakeServicesContext';
 
+// Mapeador inteligente de Velatorio (Supabase) a Obituario Digital
+const mapWakeToObituary = (wake: WakeService, moderation: any[] = []): Obituary => {
+  const isEnVelacion = wake.status === 'en_vivo' || wake.status === 'preparacion';
+  
+  const wakeApprovedCondolences = moderation
+    .filter(m => m.wakeId === wake.id && m.status === 'aprobado')
+    .map(m => ({
+      id: m.id,
+      author: m.senderName,
+      relationship: m.senderCity || 'Comunidad y allegados',
+      message: m.message,
+      timestamp: m.timestamp,
+      candleLit: m.tributeType === 'candle',
+      floralTribute: m.tributeType === 'flower' ? 'Ofrenda floral' : undefined
+    }));
+
+  const wakeApprovedTributes = moderation
+    .filter(m => m.wakeId === wake.id && m.status === 'aprobado')
+    .map(m => ({
+      id: `trib-${m.id}`,
+      type: (m.tributeType as 'candle' | 'flower' | 'prayer' | 'heart') || 'candle',
+      author: m.senderName,
+      timestamp: m.timestamp
+    }));
+
+  return {
+    id: wake.id,
+    fullName: wake.deceasedName,
+    epitaph: wake.epitaph || 'Su recuerdo y amor vivirán por siempre en nuestros corazones.',
+    birthDate: wake.birthYear ? `Año ${wake.birthYear}` : '---',
+    passedDate: wake.passedYear ? `${wake.passedYear}` : `${new Date().getFullYear()}`,
+    age: wake.age || 0,
+    photoUrl: wake.photoUrl || '',
+    biography: wake.epitaph 
+      ? `Homenaje en memoria de ${wake.deceasedName}. "${wake.epitaph}". Acompañamos a su familia en este momento de conmemoración y recogimiento.`
+      : `Servicio memorial de ${wake.deceasedName} a cargo de Cochería J.V. González en ${wake.chapelRoom} (${wake.branchName}). Acompañamos con profundo respeto y estima a sus seres queridos.`,
+    familyMembers: ['Familiares, deudos y allegados'],
+    status: isEnVelacion ? 'en_velacion' : 'inhumado',
+    funeralService: {
+      chapelRoom: `${wake.chapelRoom} • ${wake.branchName}`,
+      wakeDate: isEnVelacion ? 'Capilla Ardiente en Curso' : 'Servicio Concluido',
+      wakeHours: isEnVelacion ? 'Guardia y acompañamiento permanente 24hs' : 'Cortejo realizado',
+      massDetails: 'Misa y responso en capilla',
+      processionTime: wake.cortegeTime || 'A coordinar por la familia',
+      cemeteryOrCrematory: 'Cementerio Parque de la Paz',
+      locationAddress: wake.branchName
+    },
+    candlesCount: (wake.candlesCount || 0) + wakeApprovedCondolences.filter(c => c.candleLit).length,
+    condolences: wakeApprovedCondolences,
+    tributes: wakeApprovedTributes
+  };
+};
+
 export const LandingHomePage: React.FC = () => {
   const { isDark } = useTheme();
   const navigate = useNavigate();
-  const { wakeServices } = useWakeServices();
+  const { wakeServices, moderationQueue, addCondolenceToQueue, lightWakeCandle } = useWakeServices();
   const [activeSection, setActiveSection] = useState('inicio');
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Initialize obituaries with local storage caching for tributes and candles
+  // Initialize base obituaries with local storage caching for tributes and candles
   const [obituaries, setObituaries] = useState<Obituary[]>(() => {
     try {
       const saved = localStorage.getItem('cocheria_jvg_obituaries');
@@ -48,8 +101,30 @@ export const LandingHomePage: React.FC = () => {
     }
   }, [obituaries]);
 
-  // Handle candle lighting
+  // Combinación en tiempo real: Velatorios de Supabase + Archivo histórico
+  const dynamicObituaries = useMemo(() => {
+    const realObits = wakeServices.map(w => mapWakeToObituary(w, moderationQueue));
+    const realNames = new Set(realObits.map(r => r.fullName.trim().toLowerCase()));
+    const nonDuplicatedBase = obituaries.filter(b => 
+      !realNames.has(b.fullName.trim().toLowerCase()) && !realObits.some(r => r.id === b.id)
+    );
+    return [...realObits, ...nonDuplicatedBase];
+  }, [wakeServices, moderationQueue, obituaries]);
+
+  // Handle candle lighting (sincronizado con Supabase si corresponde)
   const handleLightCandle = (obituaryId: string, authorName = 'Un allegado') => {
+    if (wakeServices.some(w => w.id === obituaryId)) {
+      lightWakeCandle(obituaryId);
+      addCondolenceToQueue({
+        wakeId: obituaryId,
+        senderName: authorName,
+        senderCity: 'Comunidad',
+        message: '🕯️ Ha encendido una vela en memoria del homenajeado.',
+        tributeType: 'candle'
+      });
+      return;
+    }
+
     setObituaries(prev => prev.map(item => {
       if (item.id === obituaryId) {
         const newTribute: MemorialTribute = {
@@ -68,8 +143,22 @@ export const LandingHomePage: React.FC = () => {
     }));
   };
 
-  // Handle adding condolence
+  // Handle adding condolence (sincronizado con Supabase si corresponde)
   const handleAddCondolence = (obituaryId: string, condolence: Omit<CondolenceMessage, 'id' | 'timestamp'>) => {
+    if (wakeServices.some(w => w.id === obituaryId)) {
+      addCondolenceToQueue({
+        wakeId: obituaryId,
+        senderName: condolence.author,
+        senderCity: condolence.relationship || 'Comunidad',
+        message: condolence.message,
+        tributeType: condolence.candleLit ? 'candle' : 'prayer'
+      });
+      if (condolence.candleLit) {
+        lightWakeCandle(obituaryId);
+      }
+      return;
+    }
+
     setObituaries(prev => prev.map(item => {
       if (item.id === obituaryId) {
         const newEntry: CondolenceMessage = {
@@ -102,6 +191,26 @@ export const LandingHomePage: React.FC = () => {
 
   // Handle adding symbolic tribute (flower, prayer, heart)
   const handleAddTribute = (obituaryId: string, tribute: Omit<MemorialTribute, 'id' | 'timestamp'>) => {
+    if (wakeServices.some(w => w.id === obituaryId)) {
+      const typeLabels: Record<string, string> = {
+        candle: '🕯️ Encendió una vela en su memoria',
+        flower: '🌸 Ofrendó flores en su memoria',
+        prayer: '🙏 Elevó una oración por su eterno descanso',
+        heart: '❤️ Envió un homenaje de cariño'
+      };
+      addCondolenceToQueue({
+        wakeId: obituaryId,
+        senderName: tribute.author,
+        senderCity: 'Comunidad',
+        message: typeLabels[tribute.type] || 'Ofrendó un tributo conmemorativo',
+        tributeType: tribute.type
+      });
+      if (tribute.type === 'candle') {
+        lightWakeCandle(obituaryId);
+      }
+      return;
+    }
+
     setObituaries(prev => prev.map(item => {
       if (item.id === obituaryId) {
         const newTribute: MemorialTribute = {
@@ -164,7 +273,7 @@ export const LandingHomePage: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScrollSpy);
   }, []);
 
-  const activeObituariesCount = obituaries.filter(o => o.status === 'en_velacion').length;
+  const activeObituariesCount = dynamicObituaries.filter(o => o.status === 'en_velacion').length;
 
   // Font size modifier classes
   const fontSizeClasses = {
@@ -174,19 +283,18 @@ export const LandingHomePage: React.FC = () => {
   }[fontSize];
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-stone-950 text-stone-100' : 'bg-stone-50 text-stone-900'} flex flex-col ${fontSizeClasses} transition-colors duration-300`}>
+    <div className={`min-h-screen ${isDark ? 'bg-stone-950 text-stone-100' : 'bg-stone-50 text-stone-900'} ${fontSizeClasses} font-sans selection:bg-amber-600 selection:text-white transition-colors duration-300`}>
       
-      {/* Top Navbar */}
+      {/* Top Main Navigation Bar */}
       <Navbar
         activeSection={activeSection}
         onNavigate={handleNavigate}
-        fontSize={fontSize}
-        onChangeFontSize={setFontSize}
         activeObituariesCount={activeObituariesCount}
+        onOpenBereavementGuide={() => setIsGuideOpen(true)}
       />
 
-      {/* Main Content */}
-      <main className="flex-1">
+      {/* Main Sections Body */}
+      <main>
         <div id="inicio">
           <Hero
             onNavigate={handleNavigate}
@@ -201,7 +309,7 @@ export const LandingHomePage: React.FC = () => {
         <ParallaxQuoteSection />
 
         <DigitalObituary
-          obituaries={obituaries}
+          obituaries={dynamicObituaries}
           onLightCandle={handleLightCandle}
           onAddCondolence={handleAddCondolence}
           onAddTribute={handleAddTribute}

@@ -497,11 +497,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 {wakeServices.map(wake => {
                   const isLive = wake.status === 'en_vivo';
+                  const isFinalizado = wake.status === 'finalizado';
                   return (
                     <div
                       key={wake.id}
                       className={`bg-stone-900/90 border ${
-                        isLive ? 'border-amber-500/50 shadow-amber-950/20' : 'border-stone-800'
+                        isLive 
+                          ? 'border-amber-500/50 shadow-amber-950/20' 
+                          : isFinalizado 
+                            ? 'border-stone-800/80 opacity-90' 
+                            : 'border-stone-800'
                       } rounded-3xl p-5 sm:p-6 shadow-xl flex flex-col justify-between gap-5 transition-all`}
                     >
                       {/* Top Header Card */}
@@ -528,10 +533,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                           <div className="flex items-center gap-2 flex-wrap mb-1">
                             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono tracking-wider ${
                               isLive 
-                                ? 'bg-red-600/20 text-red-400 border border-red-500/40' 
-                                : 'bg-stone-800 text-stone-400 border border-stone-700'
+                                ? 'bg-red-600/20 text-red-400 border border-red-500/40 animate-pulse' 
+                                : isFinalizado
+                                  ? 'bg-stone-800 text-stone-300 border border-stone-700'
+                                  : 'bg-amber-950/40 text-amber-300 border border-amber-700/40'
                             }`}>
-                              {isLive ? '🔴 EN VIVO' : '⚪ EN PREPARACIÓN'}
+                              {isLive ? '🔴 EN VIVO (En Pantalla y Obituario)' : isFinalizado ? '🕊️ FINALIZADO (Archivado en Obituario)' : '⚪ EN PREPARACIÓN'}
                             </span>
                             <span className="text-xs text-stone-400 font-mono">
                               PIN: <strong className="text-amber-400 font-bold tracking-widest">{wake.accessPin}</strong>
@@ -621,19 +628,48 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                           }`}
                         >
                           {isLive ? <Square className="w-3.5 h-3.5 fill-current" /> : <Play className="w-3.5 h-3.5 fill-current" />}
-                          <span>{isLive ? 'Pausar Transmisión' : 'Iniciar Directo'}</span>
+                          <span>{isLive ? 'Pausar' : 'Directo'}</span>
                         </button>
 
-                        {/* Delete/Archive */}
+                        {/* Concluir Servicio y pasar a obituario histórico */}
+                        {!isFinalizado ? (
+                          <button
+                            onClick={() => {
+                              if (confirm(`¿Concluir el servicio de ${wake.deceasedName}? Pasará automáticamente a "Descanso Eterno" en el obituario público y liberará las pantallas de la sala.`)) {
+                                setWakeStatus(wake.id, 'finalizado');
+                                showNotification(`Servicio concluido. ${wake.deceasedName} pasó a Descanso Eterno en el obituario.`);
+                              }
+                            }}
+                            className="px-3 py-2 rounded-xl bg-stone-850 hover:bg-stone-750 border border-stone-700 text-xs font-semibold text-stone-300 hover:text-emerald-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="Finalizar servicio y archivar en obituario (Descanso Eterno)"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Concluir</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => {
+                              setWakeStatus(wake.id, 'en_vivo');
+                              showNotification(`Servicio de ${wake.deceasedName} reactivado en vivo.`);
+                            }}
+                            className="px-3 py-2 rounded-xl bg-amber-600/20 border border-amber-500/40 text-xs font-semibold text-amber-300 hover:bg-amber-600/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            title="Reactivar velatorio en vivo"
+                          >
+                            <Play className="w-3.5 h-3.5 fill-current" />
+                            <span>Reactivar</span>
+                          </button>
+                        )}
+
+                        {/* Delete permanently */}
                         <button
                           onClick={() => {
-                            if (confirm(`¿Finalizar y archivar el velatorio de ${wake.deceasedName}?`)) {
+                            if (confirm(`¿Eliminar definitivamente el registro de ${wake.deceasedName}? Esta acción borrará sus datos de la base de datos.`)) {
                               deleteWakeService(wake.id);
-                              showNotification(`Velatorio de ${wake.deceasedName} archivado.`);
+                              showNotification(`Velatorio de ${wake.deceasedName} eliminado.`);
                             }
                           }}
                           className="p-2 rounded-xl text-stone-500 hover:text-red-400 hover:bg-red-950/40 transition-colors cursor-pointer"
-                          title="Finalizar y archivar servicio"
+                          title="Eliminar definitivamente del sistema"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
