@@ -289,6 +289,8 @@ export const LandingHomePage: React.FC = () => {
       <Navbar
         activeSection={activeSection}
         onNavigate={handleNavigate}
+        fontSize={fontSize}
+        onChangeFontSize={setFontSize}
         activeObituariesCount={activeObituariesCount}
         onOpenBereavementGuide={() => setIsGuideOpen(true)}
       />

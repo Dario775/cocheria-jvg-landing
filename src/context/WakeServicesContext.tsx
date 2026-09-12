@@ -159,7 +159,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
           mode: 'espera',
           is_online: true
         }));
-        supabase.from('tv_devices').upsert(seedTvs).then(() => {}).catch(() => {});
+        supabase.from('tv_devices').upsert(seedTvs).then(() => {}, () => {});
       }
 
       // 3. Obtener condolencias
@@ -258,7 +258,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }).then(({ error }) => {
       if (error) console.error('Error al insertar en Supabase (wake_services):', error);
       else console.log('Velatorio insertado con éxito en Supabase:', newService.id);
-    }).catch(err => console.error('Error de red al insertar en Supabase:', err));
+    }, err => console.error('Error de red al insertar en Supabase:', err));
 
     // Vincular al TV Box de esa sala
     if (data.chapelRoom) {
@@ -270,7 +270,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
           supabase.from('tv_devices').update({
             assigned_wake_id: newService.id,
             mode: newMode
-          }).eq('device_code', tv.deviceCode).then(() => {}).catch(() => {});
+          }).eq('device_code', tv.deviceCode).then(() => {}, () => {});
 
           return {
             ...tv,
@@ -319,7 +319,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
       supabase.from('wake_services').update(dbPayload).eq('id', id).then(({ error }) => {
         if (error) console.error('Error al actualizar en Supabase (wake_services):', error);
         else console.log('Velatorio actualizado con éxito en Supabase:', id);
-      }).catch(err => console.error('Error de red al actualizar en Supabase:', err));
+      }, err => console.error('Error de red al actualizar en Supabase:', err));
     }
   };
 
@@ -331,8 +331,8 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     supabase.from('wake_services').delete().eq('id', id).then(({ error }) => {
       if (error) console.error('Error al eliminar en Supabase (wake_services):', error);
       else console.log('Velatorio eliminado con éxito en Supabase:', id);
-    }).catch(err => console.error('Error de red al eliminar en Supabase:', err));
-    supabase.from('tv_devices').update({ assigned_wake_id: null, mode: 'espera' }).eq('assigned_wake_id', id).then(() => {}).catch(() => {});
+    }, err => console.error('Error de red al eliminar en Supabase:', err));
+    supabase.from('tv_devices').update({ assigned_wake_id: null, mode: 'espera' }).eq('assigned_wake_id', id).then(() => {}, () => {});
   };
 
   // Set wake status
@@ -340,13 +340,13 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const isLive = status === 'en_vivo';
     setWakeServices(prev => prev.map(s => s.id === id ? { ...s, status, isLive } : s));
 
-    supabase.from('wake_services').update({ status, is_live: isLive }).eq('id', id).then(() => {}).catch(() => {});
+    supabase.from('wake_services').update({ status, is_live: isLive }).eq('id', id).then(() => {}, () => {});
 
     // Sincronizar TVs asignados
     setTvDevices(prev => prev.map(tv => {
       if (tv.assignedWakeId === id) {
         const mode = isLive ? 'transmision' : 'espera';
-        supabase.from('tv_devices').update({ mode }).eq('device_code', tv.deviceCode).then(() => {}).catch(() => {});
+        supabase.from('tv_devices').update({ mode }).eq('device_code', tv.deviceCode).then(() => {}, () => {});
         return {
           ...tv,
           mode
@@ -361,7 +361,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setWakeServices(prev => prev.map(s => {
       if (s.id === wakeId) {
         const nextCount = (s.candlesCount || 0) + 1;
-        supabase.from('wake_services').update({ candles_count: nextCount }).eq('id', wakeId).then(() => {}).catch(() => {});
+        supabase.from('wake_services').update({ candles_count: nextCount }).eq('id', wakeId).then(() => {}, () => {});
         return { ...s, candlesCount: nextCount };
       }
       return s;
@@ -373,7 +373,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setTvDevices(prev => prev.map(tv => {
       if (tv.deviceCode === deviceCode) {
         const nextMode = tv.mode === 'transmision' ? 'espera' : 'transmision';
-        supabase.from('tv_devices').update({ mode: nextMode }).eq('device_code', deviceCode).then(() => {}).catch(() => {});
+        supabase.from('tv_devices').update({ mode: nextMode }).eq('device_code', deviceCode).then(() => {}, () => {});
         return {
           ...tv,
           mode: nextMode
@@ -386,7 +386,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Set TV mode directly
   const setTVMode = (deviceCode: string, mode: 'transmision' | 'espera') => {
     setTvDevices(prev => prev.map(tv => tv.deviceCode === deviceCode ? { ...tv, mode } : tv));
-    supabase.from('tv_devices').update({ mode }).eq('device_code', deviceCode).then(() => {}).catch(() => {});
+    supabase.from('tv_devices').update({ mode }).eq('device_code', deviceCode).then(() => {}, () => {});
   };
 
   // Assign wake to TV
@@ -403,7 +403,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
       return tv;
     }));
 
-    supabase.from('tv_devices').update({ assigned_wake_id: wakeId, mode }).eq('device_code', deviceCode).then(() => {}).catch(() => {});
+    supabase.from('tv_devices').update({ assigned_wake_id: wakeId, mode }).eq('device_code', deviceCode).then(() => {}, () => {});
   };
 
   // Create TV device
@@ -462,12 +462,12 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
   // Moderation
   const approveCondolence = (id: string) => {
     setModerationQueue(prev => prev.map(c => c.id === id ? { ...c, status: 'aprobado' } : c));
-    supabase.from('wake_condolences').update({ status: 'aprobado' }).eq('id', id).then(() => {}).catch(() => {});
+    supabase.from('wake_condolences').update({ status: 'aprobado' }).eq('id', id).then(() => {}, () => {});
   };
 
   const rejectCondolence = (id: string) => {
     setModerationQueue(prev => prev.map(c => c.id === id ? { ...c, status: 'rechazado' } : c));
-    supabase.from('wake_condolences').update({ status: 'rechazado' }).eq('id', id).then(() => {}).catch(() => {});
+    supabase.from('wake_condolences').update({ status: 'rechazado' }).eq('id', id).then(() => {}, () => {});
   };
 
   const addCondolenceToQueue = (item: Omit<ModerationCondolenceItem, 'id' | 'timestamp' | 'status'>) => {
@@ -503,7 +503,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }).then(({ error }) => {
       if (error) console.error('Error al insertar condolencia en Supabase:', error);
       else console.log('Condolencia sincronizada con éxito en Supabase:', newItem.id);
-    }).catch(err => console.error('Error de red al insertar condolencia en Supabase:', err));
+    }, err => console.error('Error de red al insertar condolencia en Supabase:', err));
   };
 
   const resetToDefaults = async () => {

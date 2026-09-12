@@ -1,5 +1,6 @@
 import React from 'react';
-import { Phone, MessageCircle, MapPin, Mail, Clock, Heart, Shield, Facebook, Instagram, Youtube, ArrowUp, Building2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Phone, MessageCircle, MapPin, Mail, Clock, Heart, Shield, Facebook, Instagram, Youtube, ArrowUp, Building2, Tv } from 'lucide-react';
 import { EMERGENCY_INFO, GROUP_BRANCHES } from '../data/mockData';
 import { EmblemIcon, LogoJVGonzalez, LogoGuemes, LogoMetan, UnifiedCompanyLogo } from './logos/CompanyLogos';
 import { useTheme } from '../context/ThemeContext';
@@ -178,18 +179,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li className="pt-2 border-t border-stone-800/80 space-y-1.5">
-                <a 
-                  href="/admin"
-                  className="text-amber-400 hover:text-amber-300 font-semibold transition-colors flex items-center gap-1"
+                <Link 
+                  to="/admin"
+                  className="text-amber-400 hover:text-amber-300 font-semibold transition-colors flex items-center gap-1 text-xs"
                 >
                   <span>→ Panel de Guardia & Velatorios</span>
-                </a>
-                <a 
-                  href="/velatorio"
+                </Link>
+                <Link 
+                  to="/velatorio"
                   className="text-stone-400 hover:text-stone-200 transition-colors flex items-center gap-1 text-[11px]"
                 >
-                  <span>→ Capilla Virtual con PIN</span>
-                </a>
+                  <span>→ Capilla Ardiente Virtual (PIN)</span>
+                </Link>
+                <Link 
+                  to="/tv"
+                  className="text-stone-400 hover:text-stone-200 transition-colors flex items-center gap-1 text-[11px]"
+                >
+                  <Tv className="w-3 h-3 text-stone-500" />
+                  <span>→ Terminal Kiosco TV Salas</span>
+                </Link>
               </li>
             </ul>
           </div>

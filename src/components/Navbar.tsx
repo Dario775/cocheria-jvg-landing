@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, MessageCircle, MapPin, Menu, X, Sun, Moon, Flame } from 'lucide-react';
+import { Phone, MessageCircle, MapPin, Menu, X, Sun, Moon, Flame, FileText } from 'lucide-react';
 import { EMERGENCY_INFO } from '../data/mockData';
 import { EmblemIcon } from './logos/CompanyLogos';
 import { useTheme } from '../context/ThemeContext';
@@ -7,17 +7,19 @@ import { useTheme } from '../context/ThemeContext';
 interface NavbarProps {
   activeSection: string;
   onNavigate: (sectionId: string) => void;
-  fontSize: 'normal' | 'large' | 'xlarge';
-  onChangeFontSize: (size: 'normal' | 'large' | 'xlarge') => void;
+  fontSize?: 'normal' | 'large' | 'xlarge';
+  onChangeFontSize?: (size: 'normal' | 'large' | 'xlarge') => void;
   activeObituariesCount: number;
+  onOpenBereavementGuide?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
   onNavigate,
-  fontSize,
+  fontSize = 'normal',
   onChangeFontSize,
-  activeObituariesCount
+  activeObituariesCount,
+  onOpenBereavementGuide
 }) => {
   const { isDark, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -85,7 +87,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <div className="hidden lg:flex items-center gap-1 bg-stone-800/90 px-2.5 py-1 rounded-lg border border-stone-700 text-xs font-semibold">
               <span className="text-stone-400 mr-1">Fuente:</span>
               <button
-                onClick={() => onChangeFontSize('normal')}
+                onClick={() => onChangeFontSize && onChangeFontSize('normal')}
                 className={`px-2 py-0.5 rounded transition-all ${
                   fontSize === 'normal' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white'
                 }`}
@@ -94,7 +96,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 A
               </button>
               <button
-                onClick={() => onChangeFontSize('large')}
+                onClick={() => onChangeFontSize && onChangeFontSize('large')}
                 className={`px-2 py-0.5 rounded transition-all ${
                   fontSize === 'large' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-stone-400 hover:text-white'
                 }`}
@@ -103,6 +105,18 @@ export const Navbar: React.FC<NavbarProps> = ({
                 A+
               </button>
             </div>
+
+            {/* Quick Bereavement Guide Button in Top Bar */}
+            {onOpenBereavementGuide && (
+              <button
+                onClick={onOpenBereavementGuide}
+                className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-amber-950/60 hover:bg-amber-900 text-amber-300 border border-amber-700/50 transition-all hover:scale-105 cursor-pointer shadow-xs"
+                title="Guía ante fallecimiento: ¿Qué hacer?"
+              >
+                <FileText className="w-3.5 h-3.5 text-amber-400" />
+                <span>¿Qué hacer ante un deceso?</span>
+              </button>
+            )}
 
             {/* Dark / Light Mode Button */}
             <button
@@ -279,6 +293,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Mobile Action Buttons */}
             <div className="pt-3 border-t border-stone-800/80 space-y-2.5">
+              {onOpenBereavementGuide && (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    onOpenBereavementGuide();
+                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-xs font-bold bg-amber-950/70 text-amber-300 border border-amber-800/60 hover:bg-amber-900/80 transition-colors shadow-sm"
+                >
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <span>Guía Familiar: ¿Qué hacer ante un duelo?</span>
+                </button>
+              )}
+
               <a
                 href={`tel:${EMERGENCY_INFO.phoneEmergencyMobile.replace(/\s+/g, '')}`}
                 className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-sm font-extrabold bg-gradient-to-r from-amber-700 to-amber-600 text-white shadow-lg shadow-amber-950/40"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { KeyRound, ShieldAlert, Video, Heart, Clock, MapPin, ArrowRight, Lock } from 'lucide-react';
+import { KeyRound, ShieldAlert, Video, Heart, Clock, MapPin, ArrowRight, Lock, ArrowLeft, ShieldCheck, Sparkles } from 'lucide-react';
 import { sanitizePin } from '../utils/security';
 import { VirtualWakeRoom } from '../components/streaming/VirtualWakeRoom';
 import { useWakeServices } from '../context/WakeServicesContext';
@@ -20,7 +20,7 @@ export const VirtualWakePage: React.FC = () => {
     return undefined;
   });
 
-  // Re-check when id changes
+  // Re-check when id changes or when wakeServices load from Supabase
   useEffect(() => {
     if (id) {
       const found = getWakeById(id) || getWakeByPin(id);
@@ -28,7 +28,7 @@ export const VirtualWakePage: React.FC = () => {
         setActiveWake(found);
       }
     }
-  }, [id, getWakeById, getWakeByPin]);
+  }, [id, getWakeById, getWakeByPin, wakeServices]);
 
   // Handle PIN validation
   const handleVerifyPin = (e: React.FormEvent) => {

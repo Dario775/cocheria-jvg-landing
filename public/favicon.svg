@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="96" fill="#1B4D75" stroke="#D97706" stroke-width="6"/>
+  <circle cx="100" cy="100" r="82" stroke="#FFFFFF" stroke-width="3" fill="none" opacity="0.9"/>
+  <!-- Gothic Arch -->
+  <path d="M 64 148 L 64 78 C 64 46, 82 28, 100 24 C 118 28, 136 46, 136 78 L 136 148 Z" stroke="#FFFFFF" stroke-width="4" stroke-linejoin="round" fill="#163e5e"/>
+  <!-- Cross -->
+  <line x1="100" y1="42" x2="100" y2="135" stroke="#D97706" stroke-width="5" stroke-linecap="round"/>
+  <line x1="80" y1="72" x2="120" y2="72" stroke="#D97706" stroke-width="5" stroke-linecap="round"/>
+</svg>
