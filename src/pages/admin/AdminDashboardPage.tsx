@@ -25,7 +25,8 @@ import {
   Play,
   Square,
   Sparkles,
-  ArrowRight
+  ArrowRight,
+  HelpCircle
 } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { useWakeServices } from '../../context/WakeServicesContext';
@@ -69,6 +70,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
   const [copiedTVCode, setCopiedTVCode] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
   const [showNewTVModal, setShowNewTVModal] = useState(false);
+  const [showTVGuideModal, setShowTVGuideModal] = useState(false);
   const [newTVData, setNewTVData] = useState({
     deviceCode: '',
     roomName: '',
@@ -903,21 +905,43 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
           <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
-                  Control Remoto de Pantallas TV Box en Salas
-                </h2>
+                <div className="flex items-center gap-2.5">
+                  <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
+                    Control Remoto de Pantallas TV Box en Salas
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => setShowTVGuideModal(true)}
+                    className="p-1 rounded-full text-amber-400 hover:text-amber-300 hover:bg-stone-800 transition-colors cursor-pointer"
+                    title="Guía: ¿Cómo se agregan y configuran las pantallas TV?"
+                  >
+                    <HelpCircle className="w-5 h-5" />
+                  </button>
+                </div>
                 <p className="text-xs sm:text-sm text-stone-400 mt-1">
                   Conmute de manera instantánea entre el Modo Transmisión (homenaje al difunto y condolencias) y el Modo Espera (guardia institucional 24hs) para cada Smart TV.
                 </p>
               </div>
 
-              <button
-                onClick={() => setShowNewTVModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm tracking-wide transition-all shadow-lg hover:shadow-amber-600/20 active:scale-[0.99] cursor-pointer flex-shrink-0"
-              >
-                <PlusCircle className="w-4 h-4" />
-                <span>Vincular Nueva Pantalla / Sala</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => setShowTVGuideModal(true)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl bg-stone-900 hover:bg-stone-850 border border-stone-700 text-stone-300 hover:text-amber-300 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                >
+                  <HelpCircle className="w-4 h-4 text-amber-500" />
+                  <span>¿Cómo funciona? (Guía)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowNewTVModal(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm tracking-wide transition-all shadow-lg hover:shadow-amber-600/20 active:scale-[0.99] cursor-pointer flex-shrink-0"
+                >
+                  <PlusCircle className="w-4 h-4" />
+                  <span>Vincular Nueva Pantalla / Sala</span>
+                </button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -1156,6 +1180,122 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                       </button>
                     </div>
                   </form>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Guía Interactiva de Instalación y Conexión de Pantallas TV Box */}
+            {showTVGuideModal && (
+              <div className="fixed inset-0 z-50 bg-stone-950/85 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 max-w-2xl w-full shadow-2xl animate-in zoom-in-95 duration-150 my-8">
+                  
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-4 pb-4 border-b border-stone-800">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-amber-500 flex-shrink-0">
+                        <HelpCircle className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="font-serif font-bold text-lg sm:text-xl text-stone-100">
+                          Guía: Cómo Vincular y Conectar Pantallas TV Box
+                        </h3>
+                        <p className="text-xs text-stone-400 mt-0.5">
+                          Sistema 100% desatendido (Cero Clics) para salas velatorias y capillas conmemorativas.
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowTVGuideModal(false)}
+                      className="text-stone-500 hover:text-stone-300 p-1.5 rounded-lg hover:bg-stone-800 transition-colors cursor-pointer"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {/* Steps */}
+                  <div className="space-y-4 py-5 text-xs sm:text-sm text-stone-300">
+                    
+                    {/* Step 1 */}
+                    <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800/80 flex items-start gap-3.5">
+                      <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 border border-amber-500/30">
+                        1
+                      </div>
+                      <div className="space-y-1">
+                        <strong className="block text-stone-100 font-semibold">
+                          Registrar la Sala en este Panel
+                        </strong>
+                        <p className="text-stone-400 leading-relaxed text-xs">
+                          Presione el botón dorado <strong className="text-amber-300">+ Vincular Nueva Pantalla / Sala</strong> e ingrese un código identificador (ej: <code className="text-amber-400 font-mono">TV-JVG-03</code>), el nombre de la sala y su sucursal.
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Step 2 */}
+                    <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800/80 flex items-start gap-3.5">
+                      <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 border border-amber-500/30">
+                        2
+                      </div>
+                      <div className="space-y-1">
+                        <strong className="block text-stone-100 font-semibold">
+                          Conectar el Televisor o TV Box en la Sala Física
+                        </strong>
+                        <p className="text-stone-400 leading-relaxed text-xs">
+                          En el televisor o Smart TV Box con Android (Xiaomi Mi Box, Fire Stick, etc.) conectado al Wi-Fi de la sucursal, abra el navegador web e introduzca la dirección única generada:
+                        </p>
+                        <div className="p-2.5 rounded-xl bg-stone-900 border border-stone-800 font-mono text-xs text-amber-300 select-all my-1.5 flex items-center justify-between">
+                          <span>https://cocheria-jvg-landing.vercel.app/tv/CODIGO_DEL_TV</span>
+                        </div>
+                        <span className="text-[11px] text-stone-500 block">
+                          Tip: Puede presionar "Copiar URL para el TV" en la tarjeta de la sala y enviársela por WhatsApp al técnico o encargado.
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Step 3 */}
+                    <div className="p-4 rounded-2xl bg-stone-950 border border-stone-800/80 flex items-start gap-3.5">
+                      <div className="w-7 h-7 rounded-xl bg-amber-500/20 text-amber-400 font-mono font-bold text-xs flex items-center justify-center flex-shrink-0 mt-0.5 border border-amber-500/30">
+                        3
+                      </div>
+                      <div className="space-y-1">
+                        <strong className="block text-stone-100 font-semibold">
+                          Operación Autónoma 24hs (Sin Tocar el Control Remoto)
+                        </strong>
+                        <p className="text-stone-400 leading-relaxed text-xs">
+                          Una vez abierta la URL en la pantalla, el sistema funciona de manera 100% automática:
+                        </p>
+                        <ul className="list-disc pl-4 space-y-1 text-xs text-stone-400 mt-1">
+                          <li><strong className="text-stone-300">Sin servicio velatorio:</strong> El TV permanece en <strong className="text-stone-300">Modo Espera</strong>, exhibiendo el logo institucional, hora oficial y teléfonos de guardia permanente.</li>
+                          <li><strong className="text-stone-300">Con servicio activo:</strong> Al asignar el difunto desde este panel, la pantalla física <strong className="text-amber-300">conmuta sola al homenaje en vivo</strong>, mostrando foto conmemorativa, epitafio, velas y el código QR para que los asistentes envíen condolencias desde el celular.</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    {/* Hardware Recommendation Card */}
+                    <div className="p-3.5 rounded-2xl bg-amber-950/20 border border-amber-800/30 text-xs text-stone-300 space-y-1">
+                      <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <span>Recomendación para Pantallas de Salas / Kiosco</span>
+                      </div>
+                      <p className="text-stone-400 text-[11px] leading-relaxed">
+                        Instale la aplicación gratuita <strong className="text-stone-200">Fully Kiosk Browser</strong> en el TV Box. Active las opciones <span className="font-mono text-amber-300">Run on Boot (arranque automático al enchufar)</span> y <span className="font-mono text-amber-300">Keep Screen On (pantalla siempre encendida)</span>. Si se corta la luz, al regresar encenderá solo en la sala correspondiente sin pedir clics ni contraseñas.
+                      </p>
+                    </div>
+
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-end pt-3 border-t border-stone-800">
+                    <button
+                      type="button"
+                      onClick={() => setShowTVGuideModal(false)}
+                      className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs tracking-wide transition-all shadow-md cursor-pointer"
+                    >
+                      Entendido, Cerrar Guía
+                    </button>
+                  </div>
+
                 </div>
               </div>
             )}
