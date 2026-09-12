@@ -58,22 +58,36 @@ ALTER TABLE public.wake_condolences ENABLE ROW LEVEL SECURITY;
 -- Eliminar políticas previas si ya existen para evitar el error 42710
 DROP POLICY IF EXISTS "Lectura pública de velatorios" ON public.wake_services;
 DROP POLICY IF EXISTS "Gestión de velatorios" ON public.wake_services;
+DROP POLICY IF EXISTS "Gestión de velatorios autenticada" ON public.wake_services;
 DROP POLICY IF EXISTS "Lectura pública de pantallas TV" ON public.tv_devices;
 DROP POLICY IF EXISTS "Gestión de pantallas TV" ON public.tv_devices;
+DROP POLICY IF EXISTS "Gestión de pantallas TV autenticada" ON public.tv_devices;
 DROP POLICY IF EXISTS "Lectura pública de condolencias" ON public.wake_condolences;
 DROP POLICY IF EXISTS "Inserción pública de condolencias" ON public.wake_condolences;
 DROP POLICY IF EXISTS "Gestión de condolencias" ON public.wake_condolences;
+DROP POLICY IF EXISTS "Moderación de condolencias autenticada" ON public.wake_condolences;
+DROP POLICY IF EXISTS "Eliminación de condolencias autenticada" ON public.wake_condolences;
 
--- Crear políticas limpias
+-- 1. Políticas para Velatorios
+-- Lectura abierta para que los familiares y las pantallas TV puedan visualizar el velatorio
 CREATE POLICY "Lectura pública de velatorios" ON public.wake_services FOR SELECT USING (true);
-CREATE POLICY "Gestión de velatorios" ON public.wake_services FOR ALL USING (true);
+-- Creación, edición y eliminación restringidas a operadores autenticados
+CREATE POLICY "Gestión de velatorios autenticada" ON public.wake_services FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- 2. Políticas para Pantallas TV Box
+-- Lectura abierta para los navegadores en las pantallas físicas de las salas
 CREATE POLICY "Lectura pública de pantallas TV" ON public.tv_devices FOR SELECT USING (true);
-CREATE POLICY "Gestión de pantallas TV" ON public.tv_devices FOR ALL USING (true);
+-- Control y asignación de pantallas restringido a operadores autenticados
+CREATE POLICY "Gestión de pantallas TV autenticada" ON public.tv_devices FOR ALL TO authenticated USING (true) WITH CHECK (true);
 
+-- 3. Políticas para Condolencias y Homenajes
+-- Familiares y allegados pueden ver las condolencias aprobadas y encender velas
 CREATE POLICY "Lectura pública de condolencias" ON public.wake_condolences FOR SELECT USING (true);
+-- Familiares y allegados pueden enviar un nuevo mensaje de condolencia
 CREATE POLICY "Inserción pública de condolencias" ON public.wake_condolences FOR INSERT WITH CHECK (true);
-CREATE POLICY "Gestión de condolencias" ON public.wake_condolences FOR ALL USING (true);
+-- Moderación (aprobar / rechazar) y eliminación restringidas exclusivamente al personal autenticado
+CREATE POLICY "Moderación de condolencias autenticada" ON public.wake_condolences FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Eliminación de condolencias autenticada" ON public.wake_condolences FOR DELETE TO authenticated USING (true);
 
 -- 6. Habilitar Supabase Realtime (Maneja si ya estaban añadidas)
 DO $$

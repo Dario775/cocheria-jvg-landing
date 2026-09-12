@@ -27,6 +27,7 @@ import {
   Sparkles,
   ArrowRight
 } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 import { useWakeServices } from '../../context/WakeServicesContext';
 import { WakeService } from '../../types';
 import { EmblemIcon } from '../../components/logos/CompanyLogos';
@@ -40,9 +41,10 @@ import {
 
 interface AdminDashboardPageProps {
   onLogout: () => void;
+  user?: User | null;
 }
 
-export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout }) => {
+export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout, user }) => {
   const navigate = useNavigate();
   const { 
     wakeServices, 
@@ -290,9 +292,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                 Panel de Guardia
               </span>
             </div>
-            <p className="text-[11px] text-stone-400">
-              Operador: <span className="text-stone-200 font-medium">Guardia Activa 24hs</span> • Sistema Autónomo
-            </p>
+            <div className="flex items-center gap-2 text-[11px] text-stone-400">
+              <span>Operador:</span>
+              <span className="text-stone-200 font-medium font-mono">{user?.email || 'Personal Autorizado'}</span>
+              <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 bg-emerald-950/60 border border-emerald-800/40 px-1.5 py-0.5 rounded-md font-medium">
+                <ShieldCheck className="w-3 h-3 text-emerald-400" />
+                <span>Sesión Segura</span>
+              </span>
+            </div>
           </div>
         </div>
 
