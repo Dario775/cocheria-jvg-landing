@@ -90,3 +90,40 @@ export interface QuickBudgetOption {
   includeProcessionCars: boolean;
   includeCoffeeService: boolean;
 }
+
+export interface WakeService {
+  id: string;
+  deceasedName: string;
+  birthYear: string;
+  passedYear: string;
+  age: number;
+  photoUrl: string;
+  epitaph?: string;
+  chapelRoom: string;
+  branchName: string;
+  cortegeTime: string;
+  accessPin: string;
+  isLive: boolean;
+  streamUrl: string;
+  status: 'preparacion' | 'en_vivo' | 'finalizado';
+  createdAt: string;
+  candlesCount?: number;
+}
+
+export interface TVDevice {
+  deviceCode: string;
+  roomName: string;
+  branchName: string;
+  assignedWakeId?: string | null;
+  mode: 'transmision' | 'espera';
+  isOnline: boolean;
+  lastSeen: string;
+}
+
+export interface AdminUserSession {
+  isAuthenticated: boolean;
+  operatorName: string;
+  role: 'guardia' | 'administrador';
+  loginTime: string;
+}
+

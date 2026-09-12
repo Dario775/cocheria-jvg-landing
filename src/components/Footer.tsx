@@ -177,14 +177,18 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                   Ubicación & Casa Central
                 </button>
               </li>
-              <li className="pt-1.5 border-t border-stone-800/80">
+              <li className="pt-2 border-t border-stone-800/80 space-y-1.5">
                 <a 
-                  href={import.meta.env.VITE_CRM_URL || 'http://localhost:3000'}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href="/admin"
                   className="text-amber-400 hover:text-amber-300 font-semibold transition-colors flex items-center gap-1"
                 >
-                  <span>→ Portal de Gestión & CRM</span>
+                  <span>→ Panel de Guardia & Velatorios</span>
+                </a>
+                <a 
+                  href="/velatorio"
+                  className="text-stone-400 hover:text-stone-200 transition-colors flex items-center gap-1 text-[11px]"
+                >
+                  <span>→ Capilla Virtual con PIN</span>
                 </a>
               </li>
             </ul>
