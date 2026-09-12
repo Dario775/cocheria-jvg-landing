@@ -14,7 +14,6 @@ import { LocationAndContact } from '../components/LocationAndContact';
 import { Footer } from '../components/Footer';
 import { FloatingEmergencyButton } from '../components/FloatingEmergencyButton';
 import { BereavementGuideModal } from '../components/BereavementGuideModal';
-import { DemoSandboxModal } from '../components/streaming/DemoSandboxModal';
 import { ParallaxQuoteSection } from '../components/effects/ParallaxQuoteSection';
 import { useTheme } from '../context/ThemeContext';
 import { useWakeServices } from '../context/WakeServicesContext';
@@ -26,7 +25,6 @@ export const LandingHomePage: React.FC = () => {
   const [activeSection, setActiveSection] = useState('inicio');
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const [isGuideOpen, setIsGuideOpen] = useState(false);
-  const [isDemoModalOpen, setIsDemoModalOpen] = useState(false);
 
   // Initialize obituaries with local storage caching for tributes and candles
   const [obituaries, setObituaries] = useState<Obituary[]>(() => {
@@ -224,7 +222,6 @@ export const LandingHomePage: React.FC = () => {
       {/* Floating 24/7 Emergency Assistance Widget */}
       <FloatingEmergencyButton
         onOpenQuickGuide={() => setIsGuideOpen(true)}
-        onOpenStreamingDemo={() => setIsDemoModalOpen(true)}
       />
 
       {/* Bereavement 3-Step Guide Modal */}
@@ -232,13 +229,6 @@ export const LandingHomePage: React.FC = () => {
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
       />
-
-      {/* Internal Demo / Simulator for Virtual Wakes and TV Box */}
-      <DemoSandboxModal
-        isOpen={isDemoModalOpen}
-        onClose={() => setIsDemoModalOpen(false)}
-      />
-
     </div>
   );
 };

@@ -5,10 +5,9 @@ import { useTheme } from '../context/ThemeContext';
 
 interface FloatingEmergencyButtonProps {
   onOpenQuickGuide: () => void;
-  onOpenStreamingDemo?: () => void;
 }
 
-export const FloatingEmergencyButton: React.FC<FloatingEmergencyButtonProps> = ({ onOpenQuickGuide, onOpenStreamingDemo }) => {
+export const FloatingEmergencyButton: React.FC<FloatingEmergencyButtonProps> = ({ onOpenQuickGuide }) => {
   const { isDark } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -108,21 +107,6 @@ export const FloatingEmergencyButton: React.FC<FloatingEmergencyButtonProps> = (
               <HelpCircle className="w-3.5 h-3.5 text-amber-600" />
               ¿Qué hacer ante un fallecimiento? (Guía)
             </button>
-
-            {/* Internal Demo / Simulator trigger */}
-            {onOpenStreamingDemo && (
-              <button
-                onClick={() => {
-                  setIsOpen(false);
-                  onOpenStreamingDemo();
-                }}
-                className={`flex items-center justify-center gap-1.5 w-full text-center py-1 text-[11px] ${
-                  isDark ? 'text-amber-400/80 hover:text-amber-300' : 'text-amber-700/80 hover:text-amber-900'
-                } hover:underline font-mono border-t ${isDark ? 'border-stone-800' : 'border-stone-200'} pt-2`}
-              >
-                <span>🎥 Probar Velatorio Online & TV Box</span>
-              </button>
-            )}
           </div>
         </div>
       )}

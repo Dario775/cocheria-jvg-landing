@@ -20,7 +20,9 @@ import {
   X 
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { useWakeServices } from '../../context/WakeServicesContext';
 import { FloatingCandleEmbers } from '../effects/FloatingCandleEmbers';
+import { sanitizeText, sanitizePin } from '../../utils/security';
 
 interface LiveCondolenceItem {
   id: string;
@@ -153,18 +155,18 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
   onClose,
   hideHeader = false,
   serviceData = {
-    id: 'demo-sepelio-1',
-    deceasedName: 'Don Roberto Ernesto Figueroa',
-    birthYear: '1943',
-    passedYear: '2026',
-    age: 83,
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-    chapelRoom: 'Sala Magna A',
-    branchName: 'Sede Central - Joaquín V. González',
-    cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
-    accessPin: '8492',
-    isLive: true,
-    streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share'
+    id: '',
+    deceasedName: 'Servicio Velatorio',
+    birthYear: '',
+    passedYear: '',
+    age: 0,
+    photoUrl: '',
+    chapelRoom: 'Sala de Velatorio',
+    branchName: 'Cochería J.V. González',
+    cortegeTime: '',
+    accessPin: '',
+    isLive: false,
+    streamUrl: ''
   }
 }) => {
   const { isDark } = useTheme();
@@ -276,44 +278,38 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
   const [selectedFilter, setSelectedFilter] = useState<'all' | 'candle' | 'flower' | 'prayer' | 'heart'>('all');
   const [litCandleSuccess, setLitCandleSuccess] = useState(false);
 
-  const [condolencesList, setCondolencesList] = useState<LiveCondolenceItem[]>([
-    {
-      id: 'c-1',
-      senderName: 'Familia Morales Gómez',
-      senderCity: 'Salta Capital',
-      message: 'Acompañamos a Marta y a toda la familia en este momento de dolor. Un abrazo entrañable.',
-      candleLit: true,
-      tributeType: 'candle',
-      timestamp: 'Hace 4 min'
-    },
-    {
-      id: 'c-2',
-      senderName: 'Dra. Silvina Navarro',
-      senderCity: 'Córdoba',
-      message: 'Elevamos una sentida oración por el eterno descanso de nuestro querido profesor Don Roberto.',
-      candleLit: true,
-      tributeType: 'prayer',
-      timestamp: 'Hace 12 min'
-    },
-    {
-      id: 'c-3',
-      senderName: 'Esteban y Gabriela',
-      senderCity: 'Buenos Aires',
-      message: 'Siempre recordaremos su generosidad y calidez. Nuestras más sinceras condolencias.',
-      candleLit: true,
-      tributeType: 'flower',
-      timestamp: 'Hace 25 min'
-    },
-    {
-      id: 'c-4',
-      senderName: 'Amigos del Ferrocarril',
-      senderCity: 'Joaquín V. González',
-      message: 'Un gran amigo, trabajador incansable y ejemplo para el pueblo. Descansa en paz, Don Roberto.',
-      candleLit: true,
-      tributeType: 'heart',
-      timestamp: 'Hace 45 min'
+  // Acceso al contexto para sincronizar con TV Box y panel de guardia
+  let addCondolenceToQueue: any = null;
+  try {
+    const wakeCtx = useWakeServices();
+    addCondolenceToQueue = wakeCtx.addCondolenceToQueue;
+  } catch {
+    // Si se utiliza fuera del provider
+  }
+
+  const storageKey = `cocheria_wake_condolences_${serviceData?.id || 'demo'}`;
+
+  const [condolencesList, setCondolencesList] = useState<LiveCondolenceItem[]>(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch (e) {
+      console.error('Error loading wake condolences from localStorage', e);
     }
-  ]);
+    return [];
+  });
+
+  // Guardar en localStorage ante cualquier cambio
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(condolencesList));
+    } catch (e) {
+      console.error('Error saving wake condolences', e);
+    }
+  }, [condolencesList, storageKey]);
 
   const chatContainerRef = useRef<HTMLDivElement | null>(null);
 
@@ -328,16 +324,20 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     }
   };
 
-  // Handle sending new live condolence / tribute
+  // Handle sending new live condolence / tribute (sanitizado)
   const handleSendCondolence = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!senderName.trim() || !messageText.trim()) return;
+    const cleanMsg = sanitizeText(messageText, 400);
+    if (!cleanMsg) return;
+
+    const finalAuthor = sanitizeText(senderName, 60) || 'Familiar o Allegado';
+    const finalCity = sanitizeText(senderCity, 50) || 'Comunidad';
 
     const newItem: LiveCondolenceItem = {
       id: `live-${Date.now()}`,
-      senderName: senderName.trim(),
-      senderCity: senderCity.trim() || 'Familiar / Allegado',
-      message: messageText.trim(),
+      senderName: finalAuthor,
+      senderCity: finalCity,
+      message: cleanMsg,
       candleLit: selectedTribute === 'candle',
       tributeType: selectedTribute,
       timestamp: 'Ahora'
@@ -348,6 +348,17 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
     setSelectedFilter('all');
     setLitCandleSuccess(true);
     setTimeout(() => setLitCandleSuccess(false), 3500);
+
+    // Enviar a la cola en tiempo real para el Smart TV Box y Panel de Guardia
+    if (addCondolenceToQueue) {
+      addCondolenceToQueue({
+        wakeId: serviceData?.id || '',
+        senderName: finalAuthor,
+        senderCity: finalCity,
+        message: cleanMsg,
+        tributeType: selectedTribute
+      });
+    }
 
     // Auto scroll chat to top
     if (chatContainerRef.current) {
@@ -418,13 +429,13 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                   <input
                     type="text"
                     inputMode="numeric"
-                    maxLength={6}
+                    maxLength={8}
                     value={pinInput}
                     onChange={(e) => {
-                      setPinInput(e.target.value.trim());
+                      setPinInput(sanitizePin(e.target.value, 8));
                       if (pinError) setPinError(false);
                     }}
-                    placeholder="PIN (8492)"
+                    placeholder="PIN de 4 dígitos"
                     className={`w-full text-center text-2xl font-mono font-bold tracking-wider py-3 px-3 rounded-xl border ${
                       pinError
                         ? 'border-red-500 bg-red-500/10 text-red-400'
@@ -434,7 +445,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 </div>
                 {pinError && (
                   <p className="text-xs text-red-500 font-medium">
-                    PIN incorrecto. Ingrese el código proporcionado por la familia. (PIN Demo: {serviceData.accessPin || '8492'})
+                    PIN incorrecto. Ingrese el código privado proporcionado por la familia.
                   </p>
                 )}
               </div>
@@ -446,20 +457,6 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 <Unlock className="w-4 h-4" />
                 <span>Ingresar al Velatorio en Vivo</span>
               </button>
-
-              <div className="pt-0.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPinInput(serviceData.accessPin || '8492');
-                    setPinError(false);
-                    startConnectionSequence();
-                  }}
-                  className="text-xs text-amber-400 hover:text-amber-300 font-medium hover:underline transition-colors flex items-center justify-center gap-1.5 mx-auto cursor-pointer"
-                >
-                  <span>🔑 Ingresar con PIN de prueba ({serviceData.accessPin || '8492'})</span>
-                </button>
-              </div>
             </form>
 
             <div className="pt-2 text-[11px] text-stone-500 border-t border-stone-800">
@@ -732,11 +729,9 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 .map((item) => {
                   const theme = TRIBUTES.find(t => t.id === item.tributeType) || TRIBUTES[0];
                   return (
-                    <motion.div
+                    <div
                       key={item.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className={`p-3 rounded-xl border border-stone-800 bg-stone-850 border-l-4 ${theme.accentBorder} space-y-1.5 shadow-xs`}
+                      className={`p-3 rounded-xl border border-stone-800 bg-stone-850 border-l-4 ${theme.accentBorder} space-y-1.5 shadow-xs animate-in fade-in slide-in-from-top-2 duration-300`}
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2 min-w-0">
@@ -769,11 +764,21 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                       <p className="text-xs sm:text-sm leading-relaxed text-stone-200 antialiased pt-0.5">
                         "{item.message}"
                       </p>
-                    </motion.div>
+                    </div>
                   );
                 })}
 
-              {condolencesList.filter(item => selectedFilter === 'all' || item.tributeType === selectedFilter).length === 0 && (
+              {condolencesList.length === 0 ? (
+                <div className="p-8 text-center text-stone-400 space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400 text-lg">
+                    🕯️
+                  </div>
+                  <p className="text-xs text-stone-300 font-medium">Aún no se han registrado homenajes en esta sala.</p>
+                  <p className="text-[11px] text-stone-500 leading-relaxed">
+                    Sea el primero en dedicar unas palabras de apoyo a la familia, encender una vela conmemorativa o enviar una ofrenda floral.
+                  </p>
+                </div>
+              ) : condolencesList.filter(item => selectedFilter === 'all' || item.tributeType === selectedFilter).length === 0 ? (
                 <div className="p-6 text-center text-stone-400 space-y-1.5">
                   <p className="text-xs">No hay homenajes en esta categoría aún.</p>
                   <button
@@ -781,10 +786,10 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                     onClick={() => setSelectedFilter('all')}
                     className="text-xs text-amber-400 hover:underline cursor-pointer"
                   >
-                    Ver todos los mensajes
+                    Ver todos los mensajes ({condolencesList.length})
                   </button>
                 </div>
-              )}
+              ) : null}
             </div>
 
             {/* Formulario de Homenajes con Selector de Modos */}
@@ -831,14 +836,15 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text"
-                    required
-                    placeholder="Su Nombre / Familia"
+                    maxLength={60}
+                    placeholder="Su Nombre / Familia (Opcional)"
                     value={senderName}
                     onChange={(e) => setSenderName(e.target.value)}
                     className="px-2.5 py-1.5 text-xs sm:text-sm rounded-lg border border-stone-700 bg-stone-950 text-white placeholder-stone-400 focus:outline-none focus:border-amber-500"
                   />
                   <input
                     type="text"
+                    maxLength={50}
                     placeholder="Ciudad (Ej: Salta)"
                     value={senderCity}
                     onChange={(e) => setSenderCity(e.target.value)}
@@ -849,6 +855,7 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 <input
                   type="text"
                   required
+                  maxLength={400}
                   placeholder="Escriba sus palabras de condolencia..."
                   value={messageText}
                   onChange={(e) => setMessageText(e.target.value)}

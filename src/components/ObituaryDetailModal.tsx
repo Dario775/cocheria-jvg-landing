@@ -4,6 +4,7 @@ import { X, Flame, Heart, Flower2, Share2, MapPin, Clock, Calendar, MessageSquar
 import { useTheme } from '../context/ThemeContext';
 import { ShareObituaryButton } from './ShareObituaryButton';
 import { shareObituary } from '../utils/shareUtils';
+import { sanitizeText } from '../utils/security';
 
 interface ObituaryDetailModalProps {
   obituary: Obituary;
@@ -81,12 +82,16 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
 
   const handleSubmitCondolence = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!authorName.trim() || !condolenceText.trim()) return;
+    const cleanMsg = sanitizeText(condolenceText, 400);
+    if (!cleanMsg) return;
+
+    const finalAuthor = sanitizeText(authorName, 60) || 'Un allegado';
+    const finalRel = sanitizeText(relationship, 50) || 'Allegado a la familia';
 
     onAddCondolence(obituary.id, {
-      author: authorName.trim(),
-      relationship: relationship.trim() || 'Allegado a la familia',
-      message: condolenceText.trim(),
+      author: finalAuthor,
+      relationship: finalRel,
+      message: cleanMsg,
       candleLit: litCandleWithCondolence
     });
 
@@ -417,10 +422,10 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className={`block text-xs ${isDark ? 'text-stone-400' : 'text-stone-600'} mb-1`}>Su Nombre y Apellido *</label>
+                    <label className={`block text-xs ${isDark ? 'text-stone-400' : 'text-stone-600'} mb-1`}>Su Nombre y Apellido (Opcional)</label>
                     <input
                       type="text"
-                      required
+                      maxLength={60}
                       placeholder="Ej. Familia Rodríguez o María Giménez"
                       value={authorName}
                       onChange={(e) => setAuthorName(e.target.value)}
@@ -433,6 +438,7 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
                     <label className={`block text-xs ${isDark ? 'text-stone-400' : 'text-stone-600'} mb-1`}>Vínculo o Parentesco</label>
                     <input
                       type="text"
+                      maxLength={50}
                       placeholder="Ej. Amigos de la infancia / Vecinos / Compañeros"
                       value={relationship}
                       onChange={(e) => setRelationship(e.target.value)}
@@ -468,6 +474,7 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
                   <label className={`block text-xs ${isDark ? 'text-stone-400' : 'text-stone-600'} mb-1`}>Su Mensaje Personal *</label>
                   <textarea
                     required
+                    maxLength={400}
                     rows={3}
                     placeholder="Escriba aquí sus palabras de consuelo, recuerdo o afecto..."
                     value={condolenceText}

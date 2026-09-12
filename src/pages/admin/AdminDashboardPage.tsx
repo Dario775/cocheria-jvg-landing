@@ -30,6 +30,13 @@ import {
 import { useWakeServices } from '../../context/WakeServicesContext';
 import { WakeService } from '../../types';
 import { EmblemIcon } from '../../components/logos/CompanyLogos';
+import { 
+  sanitizeText, 
+  sanitizeDigits, 
+  sanitizePin, 
+  sanitizeUrl, 
+  sanitizeAge 
+} from '../../utils/security';
 
 interface AdminDashboardPageProps {
   onLogout: () => void;
@@ -53,72 +60,182 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
   } = useWakeServices();
 
   const [activeTab, setActiveTab] = useState<'velatorios' | 'nuevo' | 'tv_kiosk' | 'moderacion'>('velatorios');
+  const [editingWakeId, setEditingWakeId] = useState<string | null>(null);
   const [copiedWakeId, setCopiedWakeId] = useState<string | null>(null);
   const [copiedTVCode, setCopiedTVCode] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
 
-  // Form State for "Nuevo Velatorio"
-  const [formData, setFormData] = useState({
+  // Form State limpio sin datos de prueba harcodeados
+  const initialFormData = {
     deceasedName: '',
-    birthYear: '1945',
-    passedYear: '2026',
-    age: 81,
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-    epitaph: 'En paz descansa en el reino del Señor.',
+    birthYear: '',
+    passedYear: new Date().getFullYear().toString(),
+    age: '' as number | '',
+    photoUrl: '',
+    epitaph: '',
     chapelRoom: 'Sala Magna A',
     branchName: 'Casa Central • Joaquín V. González',
-    cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
+    cortegeTime: '',
     accessPin: Math.floor(1000 + Math.random() * 9000).toString(),
-    streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share',
+    streamUrl: '',
     isLiveImmediately: true
-  });
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
+
+  // Cálculo automático de edad al cambiar los años con sanitización numérica
+  const handleBirthYearChange = (val: string) => {
+    const cleanDigits = sanitizeDigits(val, 4);
+    const bYear = parseInt(cleanDigits);
+    const pYear = parseInt(formData.passedYear);
+    let calculatedAge: number | '' = formData.age;
+    if (!isNaN(bYear) && !isNaN(pYear) && pYear >= bYear && bYear > 1900) {
+      calculatedAge = sanitizeAge(pYear - bYear);
+    }
+    setFormData(prev => ({ ...prev, birthYear: cleanDigits, age: calculatedAge }));
+  };
+
+  const handlePassedYearChange = (val: string) => {
+    const cleanDigits = sanitizeDigits(val, 4);
+    const pYear = parseInt(cleanDigits);
+    const bYear = parseInt(formData.birthYear);
+    let calculatedAge: number | '' = formData.age;
+    if (!isNaN(bYear) && !isNaN(pYear) && pYear >= bYear && bYear > 1900) {
+      calculatedAge = sanitizeAge(pYear - bYear);
+    }
+    setFormData(prev => ({ ...prev, passedYear: cleanDigits, age: calculatedAge }));
+  };
 
   const showNotification = (text: string) => {
     setNotificationMsg(text);
     setTimeout(() => setNotificationMsg(null), 3500);
   };
 
-  // Handle Form Submit
-  const handleCreateWake = (e: React.FormEvent) => {
+  // Iniciar edición de un velatorio existente
+  const handleStartEdit = (wake: WakeService) => {
+    setEditingWakeId(wake.id);
+    setFormData({
+      deceasedName: wake.deceasedName,
+      birthYear: wake.birthYear || '',
+      passedYear: wake.passedYear || new Date().getFullYear().toString(),
+      age: wake.age || '',
+      photoUrl: wake.photoUrl || '',
+      epitaph: wake.epitaph || '',
+      chapelRoom: wake.chapelRoom || 'Sala Magna A',
+      branchName: wake.branchName || 'Casa Central • Joaquín V. González',
+      cortegeTime: wake.cortegeTime || '',
+      accessPin: wake.accessPin || Math.floor(1000 + Math.random() * 9000).toString(),
+      streamUrl: wake.streamUrl || '',
+      isLiveImmediately: wake.isLive ?? true
+    });
+    setActiveTab('nuevo');
+  };
+
+  // Cancelar edición
+  const handleCancelEdit = () => {
+    setEditingWakeId(null);
+    setFormData({
+      ...initialFormData,
+      accessPin: Math.floor(1000 + Math.random() * 9000).toString()
+    });
+    setActiveTab('velatorios');
+  };
+
+  // Guardar (Crear o Modificar) con validaciones y sanitizaciones de seguridad
+  const handleSaveWake = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.deceasedName.trim()) {
-      alert('Por favor ingrese el nombre del homenajeado.');
+
+    // 1. Validar nombre del homenajeado
+    const cleanName = sanitizeText(formData.deceasedName, 100);
+    if (!cleanName || cleanName.length < 2) {
+      alert('Por favor ingrese un nombre y apellido válido para el homenajeado (mínimo 2 letras).');
       return;
     }
 
-    createWakeService({
-      deceasedName: formData.deceasedName.trim(),
-      birthYear: formData.birthYear,
-      passedYear: formData.passedYear,
-      age: Number(formData.age),
-      photoUrl: formData.photoUrl.trim() || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=500&auto=format&fit=crop&q=80',
-      epitaph: formData.epitaph.trim(),
-      chapelRoom: formData.chapelRoom,
-      branchName: formData.branchName,
-      cortegeTime: formData.cortegeTime.trim(),
-      accessPin: formData.accessPin.trim() || '1234',
-      streamUrl: formData.streamUrl.trim(),
-      isLive: formData.isLiveImmediately,
-      status: formData.isLiveImmediately ? 'en_vivo' : 'preparacion'
-    });
+    // 2. Validar y sanitizar años y edad
+    const cleanBirthYear = sanitizeDigits(formData.birthYear, 4);
+    const cleanPassedYear = sanitizeDigits(formData.passedYear, 4) || new Date().getFullYear().toString();
+    
+    let calculatedAge = 0;
+    if (formData.age !== '') {
+      calculatedAge = sanitizeAge(formData.age);
+    } else if (cleanBirthYear && cleanPassedYear) {
+      const diff = parseInt(cleanPassedYear) - parseInt(cleanBirthYear);
+      calculatedAge = sanitizeAge(diff >= 0 ? diff : 0);
+    }
 
-    showNotification(`Velatorio de "${formData.deceasedName}" creado con éxito.`);
+    // 3. Validar URL de foto (opcional, pero si se coloca debe ser HTTPS/HTTP seguro)
+    let cleanPhotoUrl = '';
+    if (formData.photoUrl.trim()) {
+      cleanPhotoUrl = sanitizeUrl(formData.photoUrl);
+      if (!cleanPhotoUrl) {
+        alert('La URL de la foto no es válida. Ingrese una dirección web que inicie con https:// o http://');
+        return;
+      }
+    }
+
+    // 4. Validar enlace de streaming (opcional, pero si se coloca debe ser seguro)
+    let cleanStreamUrl = '';
+    if (formData.streamUrl.trim()) {
+      cleanStreamUrl = sanitizeUrl(formData.streamUrl);
+      if (!cleanStreamUrl) {
+        alert('El enlace de transmisión debe ser una dirección web válida (ej: https://youtube.com/live/...)');
+        return;
+      }
+    }
+
+    // 5. Validar PIN de acceso
+    const cleanPin = sanitizePin(formData.accessPin, 8);
+    if (!cleanPin || cleanPin.length < 4) {
+      alert('El PIN de acceso debe tener entre 4 y 8 caracteres (letras y números sin espacios ni símbolos).');
+      return;
+    }
+
+    // 6. Sanitizar textos libres
+    const cleanEpitaph = sanitizeText(formData.epitaph, 250);
+    const cleanCortege = sanitizeText(formData.cortegeTime, 150);
+
+    if (editingWakeId) {
+      updateWakeService(editingWakeId, {
+        deceasedName: cleanName,
+        birthYear: cleanBirthYear,
+        passedYear: cleanPassedYear,
+        age: calculatedAge,
+        photoUrl: cleanPhotoUrl,
+        epitaph: cleanEpitaph,
+        chapelRoom: formData.chapelRoom,
+        branchName: formData.branchName,
+        cortegeTime: cleanCortege,
+        accessPin: cleanPin,
+        streamUrl: cleanStreamUrl,
+        isLive: formData.isLiveImmediately,
+        status: formData.isLiveImmediately ? 'en_vivo' : 'preparacion'
+      });
+      showNotification(`Velatorio de "${cleanName}" actualizado con éxito.`);
+      setEditingWakeId(null);
+    } else {
+      createWakeService({
+        deceasedName: cleanName,
+        birthYear: cleanBirthYear,
+        passedYear: cleanPassedYear,
+        age: calculatedAge,
+        photoUrl: cleanPhotoUrl,
+        epitaph: cleanEpitaph,
+        chapelRoom: formData.chapelRoom,
+        branchName: formData.branchName,
+        cortegeTime: cleanCortege,
+        accessPin: cleanPin,
+        streamUrl: cleanStreamUrl,
+        isLive: formData.isLiveImmediately,
+        status: formData.isLiveImmediately ? 'en_vivo' : 'preparacion'
+      });
+      showNotification(`Velatorio de "${cleanName}" publicado y sincronizado.`);
+    }
+
     setActiveTab('velatorios');
-
-    // Reset Form
     setFormData({
-      deceasedName: '',
-      birthYear: '1945',
-      passedYear: '2026',
-      age: 81,
-      photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&auto=format&fit=crop&q=80',
-      epitaph: 'En paz descansa en el reino del Señor.',
-      chapelRoom: 'Sala Magna A',
-      branchName: 'Casa Central • Joaquín V. González',
-      cortegeTime: 'Mañana a las 10:00 hs hacia Cementerio Parque',
-      accessPin: Math.floor(1000 + Math.random() * 9000).toString(),
-      streamUrl: 'https://youtube.com/live/8CEwaLFlR-E?feature=share',
-      isLiveImmediately: true
+      ...initialFormData,
+      accessPin: Math.floor(1000 + Math.random() * 9000).toString()
     });
   };
 
@@ -234,15 +351,25 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
           </button>
 
           <button
-            onClick={() => setActiveTab('nuevo')}
+            onClick={() => {
+              if (editingWakeId) {
+                setActiveTab('nuevo');
+              } else {
+                setFormData({
+                  ...initialFormData,
+                  accessPin: Math.floor(1000 + Math.random() * 9000).toString()
+                });
+                setActiveTab('nuevo');
+              }
+            }}
             className={`px-3 py-1 rounded-lg font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'nuevo'
                 ? 'bg-amber-600 text-white font-semibold shadow-xs'
                 : 'text-stone-400 hover:text-stone-200'
             }`}
           >
-            <PlusCircle className="w-3.5 h-3.5" />
-            <span>+ Nuevo Servicio</span>
+            {editingWakeId ? <Edit3 className="w-3.5 h-3.5" /> : <PlusCircle className="w-3.5 h-3.5" />}
+            <span>{editingWakeId ? '✏️ Modificar' : '+ Nuevo Servicio'}</span>
           </button>
 
           <button
@@ -293,7 +420,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               </div>
 
               <button
-                onClick={() => setActiveTab('nuevo')}
+                onClick={() => {
+                  setEditingWakeId(null);
+                  setFormData({
+                    ...initialFormData,
+                    accessPin: Math.floor(1000 + Math.random() * 9000).toString()
+                  });
+                  setActiveTab('nuevo');
+                }}
                 className="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm transition-all shadow-md flex items-center gap-2 cursor-pointer self-start sm:self-auto"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -306,7 +440,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                 <Users className="w-12 h-12 mx-auto text-stone-600 mb-3" />
                 <p className="font-serif text-lg">No hay velatorios registrados en este momento.</p>
                 <button
-                  onClick={() => setActiveTab('nuevo')}
+                  onClick={() => {
+                    setEditingWakeId(null);
+                    setFormData({
+                      ...initialFormData,
+                      accessPin: Math.floor(1000 + Math.random() * 9000).toString()
+                    });
+                    setActiveTab('nuevo');
+                  }}
                   className="mt-4 px-4 py-2 bg-amber-600 text-stone-950 rounded-xl text-xs font-bold"
                 >
                   Registrar Primer Velatorio
@@ -325,12 +466,22 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                     >
                       {/* Top Header Card */}
                       <div className="flex items-start gap-4">
-                        <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-600/50 shadow-md flex-shrink-0">
-                          <img
-                            src={wake.photoUrl}
-                            alt={wake.deceasedName}
-                            className="w-full h-full object-cover filter grayscale"
-                          />
+                        <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border-2 border-amber-600/50 shadow-md flex-shrink-0 bg-stone-950 flex items-center justify-center">
+                          {wake.photoUrl ? (
+                            <img
+                              src={wake.photoUrl}
+                              alt={wake.deceasedName}
+                              className="w-full h-full object-cover filter grayscale"
+                              onError={(e) => {
+                                (e.target as HTMLElement).style.display = 'none';
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-stone-900 to-stone-950 text-amber-400 font-serif font-bold text-lg select-none">
+                              <span>{wake.deceasedName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '🕊️'}</span>
+                              <span className="text-[8px] font-sans font-normal text-stone-500 tracking-wider uppercase">Homenaje</span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex-1 min-w-0">
@@ -352,7 +503,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                           </h3>
 
                           <p className="text-xs text-stone-400 font-mono">
-                            {wake.birthYear} — {wake.passedYear} ({wake.age} años)
+                            {wake.birthYear && wake.passedYear ? `${wake.birthYear} — ${wake.passedYear} ` : ''}
+                            {wake.age ? `(${wake.age} años)` : ''}
                           </p>
 
                           <div className="flex items-center gap-1.5 text-xs text-stone-300 mt-2">
@@ -409,6 +561,16 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                           <span>Ver Capilla</span>
                         </a>
 
+                        {/* Edit Wake */}
+                        <button
+                          onClick={() => handleStartEdit(wake)}
+                          className="px-3 py-2 rounded-xl bg-stone-800 hover:bg-stone-750 border border-stone-700 text-xs font-semibold text-amber-400 hover:text-amber-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+                          title="Editar datos del velatorio"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Editar</span>
+                        </button>
+
                         {/* Toggle Live */}
                         <button
                           onClick={() => setWakeStatus(wake.id, isLive ? 'preparacion' : 'en_vivo')}
@@ -444,19 +606,33 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
           </div>
         )}
 
-        {/* ── TAB 2: NUEVO VELATORIO FORM ── */}
+        {/* ── TAB 2: NUEVO / MODIFICAR VELATORIO FORM ── */}
         {activeTab === 'nuevo' && (
           <div className="max-w-2xl mx-auto space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
-                Alta de Servicio Velatorio
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-400 mt-1">
-                Complete los datos para habilitar la Capilla Virtual, el enlace para familiares y sincronizar el Smart TV de la sala.
-              </p>
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
+                  {editingWakeId ? 'Modificar Servicio Velatorio' : 'Alta de Servicio Velatorio'}
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-400 mt-1">
+                  {editingWakeId 
+                    ? `Actualizando los datos del velatorio. Los cambios se guardarán y sincronizarán en tiempo real.`
+                    : 'Complete los datos para habilitar la Capilla Virtual, el enlace para familiares y sincronizar el Smart TV de la sala.'}
+                </p>
+              </div>
+
+              {editingWakeId && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-750 text-xs font-semibold text-stone-300 transition-colors"
+                >
+                  Cancelar Edición
+                </button>
+              )}
             </div>
 
-            <form onSubmit={handleCreateWake} className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
+            <form onSubmit={handleSaveWake} className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 shadow-xl space-y-5">
               
               {/* Deceased Name */}
               <div>
@@ -466,6 +642,7 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                 <input
                   type="text"
                   required
+                  maxLength={100}
                   value={formData.deceasedName}
                   onChange={e => setFormData({ ...formData, deceasedName: e.target.value })}
                   placeholder="Ej: Don Roberto Ernesto Figueroa"
@@ -481,8 +658,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="Ej: 1943"
                     value={formData.birthYear}
-                    onChange={e => setFormData({ ...formData, birthYear: e.target.value })}
+                    onChange={e => handleBirthYearChange(e.target.value)}
                     className="w-full px-4 py-3 bg-stone-950 border border-stone-700 rounded-2xl text-stone-100 text-sm font-mono"
                   />
                 </div>
@@ -492,19 +672,25 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                   </label>
                   <input
                     type="text"
+                    inputMode="numeric"
+                    maxLength={4}
+                    placeholder="Ej: 2026"
                     value={formData.passedYear}
-                    onChange={e => setFormData({ ...formData, passedYear: e.target.value })}
+                    onChange={e => handlePassedYearChange(e.target.value)}
                     className="w-full px-4 py-3 bg-stone-950 border border-stone-700 rounded-2xl text-stone-100 text-sm font-mono"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2">
-                    Edad
+                    Edad (Auto)
                   </label>
                   <input
                     type="number"
+                    min={0}
+                    max={130}
+                    placeholder="Años"
                     value={formData.age}
-                    onChange={e => setFormData({ ...formData, age: Number(e.target.value) })}
+                    onChange={e => setFormData({ ...formData, age: e.target.value === '' ? '' : sanitizeAge(e.target.value) })}
                     className="w-full px-4 py-3 bg-stone-950 border border-stone-700 rounded-2xl text-stone-100 text-sm font-mono"
                   />
                 </div>
@@ -513,13 +699,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               {/* Photo URL */}
               <div>
                 <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2">
-                  URL de Foto Conmemorativa
+                  URL de Foto Conmemorativa (Opcional)
                 </label>
                 <input
                   type="url"
+                  maxLength={500}
                   value={formData.photoUrl}
                   onChange={e => setFormData({ ...formData, photoUrl: e.target.value })}
-                  placeholder="https://..."
+                  placeholder="https://... (dejar vacío si no hay foto para mostrar monograma solemne)"
                   className="w-full px-4 py-3 bg-stone-950 border border-stone-700 focus:border-amber-500 rounded-2xl text-stone-100 text-sm"
                 />
               </div>
@@ -527,10 +714,11 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               {/* Epitaph */}
               <div>
                 <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2">
-                  Epitafio / Frase Recordatoria
+                  Epitafio / Frase Recordatoria (Opcional)
                 </label>
                 <input
                   type="text"
+                  maxLength={250}
                   value={formData.epitaph}
                   onChange={e => setFormData({ ...formData, epitaph: e.target.value })}
                   placeholder="Ej: Su recuerdo vivirá por siempre en nuestros corazones."
@@ -575,13 +763,14 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               {/* Cortege Time */}
               <div>
                 <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-2">
-                  Horario y Destino del Cortejo
+                  Horario y Destino del Cortejo (Opcional)
                 </label>
                 <input
                   type="text"
+                  maxLength={150}
                   value={formData.cortegeTime}
                   onChange={e => setFormData({ ...formData, cortegeTime: e.target.value })}
-                  placeholder="Ej: Mañana a las 10:00 hs hacia Cementerio Parque"
+                  placeholder="Ej: Mañana a las 10:00 hs hacia Cementerio Parque El Recuerdo"
                   className="w-full px-4 py-3 bg-stone-950 border border-stone-700 focus:border-amber-500 rounded-2xl text-stone-100 text-sm"
                 />
               </div>
@@ -594,9 +783,10 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                   </label>
                   <input
                     type="text"
+                    maxLength={500}
                     value={formData.streamUrl}
                     onChange={e => setFormData({ ...formData, streamUrl: e.target.value })}
-                    placeholder="https://youtube.com/live/..."
+                    placeholder="https://youtube.com/live/... o dejar vacío"
                     className="w-full px-4 py-3 bg-stone-950 border border-stone-700 focus:border-amber-500 rounded-2xl text-stone-100 text-sm font-mono"
                   />
                 </div>
@@ -608,9 +798,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                   <div className="flex gap-2">
                     <input
                       type="text"
-                      maxLength={6}
+                      maxLength={8}
                       value={formData.accessPin}
-                      onChange={e => setFormData({ ...formData, accessPin: e.target.value })}
+                      onChange={e => setFormData({ ...formData, accessPin: sanitizePin(e.target.value, 8) })}
                       className="w-full px-4 py-3 bg-stone-950 border border-stone-700 rounded-2xl text-stone-100 text-sm font-mono tracking-widest text-center"
                     />
                     <button
@@ -635,7 +825,9 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                     className="w-4 h-4 text-amber-600 rounded bg-stone-900 border-stone-700"
                   />
                   <div>
-                    <strong className="block text-xs text-stone-200">Activar transmisión en directo de inmediato</strong>
+                    <strong className="block text-xs text-stone-200">
+                      {editingWakeId ? 'Mantener o poner transmisión en directo activa' : 'Activar transmisión en directo de inmediato'}
+                    </strong>
                     <span className="text-[11px] text-stone-400">
                       Sincroniza automáticamente la pantalla TV Box de la sala seleccionada.
                     </span>
@@ -647,8 +839,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-stone-800">
                 <button
                   type="button"
-                  onClick={() => setActiveTab('velatorios')}
-                  className="px-5 py-2.5 rounded-xl text-xs font-semibold text-stone-400 hover:text-white"
+                  onClick={editingWakeId ? handleCancelEdit : () => setActiveTab('velatorios')}
+                  className="px-5 py-2.5 rounded-xl text-xs font-semibold text-stone-400 hover:text-white cursor-pointer"
                 >
                   Cancelar
                 </button>
@@ -656,8 +848,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                   type="submit"
                   className="px-6 py-3 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm transition-all shadow-lg cursor-pointer flex items-center gap-2"
                 >
-                  <PlusCircle className="w-4 h-4" />
-                  <span>Publicar y Activar Servicio</span>
+                  {editingWakeId ? <Check className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
+                  <span>{editingWakeId ? 'Guardar Cambios' : 'Publicar y Activar Servicio'}</span>
                 </button>
               </div>
 
@@ -722,11 +914,17 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                         </div>
                         {assignedWake ? (
                           <div className="flex items-center gap-3 mt-2">
-                            <img
-                              src={assignedWake.photoUrl}
-                              alt=""
-                              className="w-10 h-10 rounded-xl object-cover grayscale"
-                            />
+                            {assignedWake.photoUrl ? (
+                              <img
+                                src={assignedWake.photoUrl}
+                                alt=""
+                                className="w-10 h-10 rounded-xl object-cover grayscale flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-xl bg-stone-900 border border-stone-750 flex items-center justify-center text-amber-400 text-xs font-serif font-bold flex-shrink-0">
+                                {assignedWake.deceasedName.slice(0, 2).toUpperCase()}
+                              </div>
+                            )}
                             <div>
                               <strong className="block text-stone-200 text-xs sm:text-sm">
                                 {assignedWake.deceasedName}
@@ -920,15 +1118,15 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
           <span>Cochería J.V. González • Backoffice de Guardia v2.0</span>
           <span>•</span>
           <button
-            onClick={() => {
-              if (confirm('¿Restablecer velatorios y dispositivos a los valores de demostración iniciales?')) {
-                resetToDefaults();
-                showNotification('Datos restablecidos a valores iniciales.');
+            onClick={async () => {
+              if (confirm('¿Vaciar y reiniciar el sistema a cero? Se eliminarán los velatorios tanto de la memoria del navegador como de la base de datos Supabase.')) {
+                await resetToDefaults();
+                showNotification('Sistema reiniciado y base de datos limpia.');
               }
             }}
-            className="text-stone-500 hover:text-stone-300 underline cursor-pointer"
+            className="text-stone-500 hover:text-amber-400 underline cursor-pointer"
           >
-            Restablecer datos demo
+            Purgar base de datos y reiniciar a limpio
           </button>
         </div>
       </footer>

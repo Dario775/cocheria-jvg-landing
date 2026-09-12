@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Clock, MapPin, Sparkles, Flame, Radio, Tv, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Flame, Radio, Tv, ShieldCheck, ArrowLeft, WifiOff, Wifi, QrCode, Share2 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { useWakeServices } from '../context/WakeServicesContext';
 import { EmblemIcon } from '../components/logos/CompanyLogos';
 import { FloatingCandleEmbers } from '../components/effects/FloatingCandleEmbers';
@@ -10,6 +11,84 @@ export const TVKioskPage: React.FC = () => {
   const { deviceCode } = useParams<{ deviceCode: string }>();
   const navigate = useNavigate();
   const { getTVDevice, getWakeById, moderationQueue, tvDevices } = useWakeServices();
+
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [hideCursor, setHideCursor] = useState(false);
+  const cursorTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Auto-restore last device code if accessed via /tv without param
+  useEffect(() => {
+    if (!deviceCode) {
+      const savedCode = localStorage.getItem('cocheria_tv_device_code');
+      if (savedCode && getTVDevice(savedCode)) {
+        navigate(`/tv/${savedCode}`, { replace: true });
+      }
+    } else {
+      localStorage.setItem('cocheria_tv_device_code', deviceCode);
+    }
+  }, [deviceCode, navigate, getTVDevice]);
+
+  // Screen Wake Lock API (Evita que el televisor se suspenda o apague)
+  useEffect(() => {
+    let wakeLock: any = null;
+    const requestWakeLock = async () => {
+      try {
+        if ('wakeLock' in navigator) {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        }
+      } catch (err) {
+        // Ignorar silenciosamente si no está soportado por el navegador
+      }
+    };
+
+    requestWakeLock();
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (wakeLock) {
+        wakeLock.release().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Monitor network status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
+  // Auto-hide mouse cursor after 3 seconds of inactivity
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setHideCursor(false);
+      if (cursorTimerRef.current) clearTimeout(cursorTimerRef.current);
+      cursorTimerRef.current = setTimeout(() => {
+        setHideCursor(true);
+      }, 3000);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    cursorTimerRef.current = setTimeout(() => setHideCursor(true), 3000);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (cursorTimerRef.current) clearTimeout(cursorTimerRef.current);
+    };
+  }, []);
 
   const currentDevice = deviceCode ? getTVDevice(deviceCode) : undefined;
   const assignedWake = currentDevice?.assignedWakeId ? getWakeById(currentDevice.assignedWakeId) : undefined;
@@ -44,11 +123,7 @@ export const TVKioskPage: React.FC = () => {
     );
 
     if (approved.length === 0) {
-      setActiveToast({
-        sender: 'Familia Morales Gómez',
-        city: 'Salta Capital',
-        message: 'Acompañamos con amor y respeto a la familia en este momento de recogimiento.'
-      });
+      setActiveToast(null);
       return;
     }
 
@@ -85,10 +160,10 @@ export const TVKioskPage: React.FC = () => {
 
           <div>
             <h2 className="text-2xl font-serif font-bold text-stone-100">
-              Configurar Pantalla TV Box
+              Vincular Pantalla TV Box
             </h2>
             <p className="text-xs text-stone-400 mt-2">
-              Seleccione la sala física para vincular este receptor Smart TV:
+              Seleccione la sala física para configurar este receptor Smart TV (se recordará automáticamente en futuros encendidos):
             </p>
           </div>
 
@@ -96,7 +171,10 @@ export const TVKioskPage: React.FC = () => {
             {tvDevices.map(tv => (
               <button
                 key={tv.deviceCode}
-                onClick={() => navigate(`/tv/${tv.deviceCode}`)}
+                onClick={() => {
+                  localStorage.setItem('cocheria_tv_device_code', tv.deviceCode);
+                  navigate(`/tv/${tv.deviceCode}`);
+                }}
                 className="w-full p-3.5 rounded-2xl bg-stone-950 hover:bg-amber-950/40 border border-stone-800 hover:border-amber-600/50 flex items-center justify-between transition-all cursor-pointer group"
               >
                 <div>
@@ -125,10 +203,21 @@ export const TVKioskPage: React.FC = () => {
   }
 
   const isTransmissionMode = currentDevice.mode === 'transmision' && assignedWake;
+  const wakeUrl = assignedWake ? `${window.location.origin}/velatorio/${assignedWake.accessPin}` : '';
 
   return (
-    <div className="relative w-screen h-screen bg-black text-white overflow-hidden flex flex-col justify-between font-sans select-none">
+    <div className={`relative w-screen h-screen bg-black text-white overflow-hidden flex flex-col justify-between font-sans select-none ${
+      hideCursor ? 'cursor-none' : ''
+    }`}>
       
+      {/* Network Alert (Only visible if disconnected, auto-hides) */}
+      {!isOnline && (
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 px-4 py-1.5 rounded-full bg-amber-950/90 border border-amber-600/60 text-amber-300 text-xs flex items-center gap-2 shadow-lg backdrop-blur-md">
+          <WifiOff className="w-3.5 h-3.5" />
+          <span>Modo memoria local (Reconectando Wi-Fi...)</span>
+        </div>
+      )}
+
       {/* Top TV Bar: Institutional Header & Real-time Clock */}
       <div className="relative z-20 p-5 sm:p-7 bg-gradient-to-b from-black/95 via-black/60 to-transparent flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -175,19 +264,28 @@ export const TVKioskPage: React.FC = () => {
             <div className="absolute inset-0 bg-radial-at-c from-stone-900/80 via-black to-black" />
 
             <div className="relative z-10 space-y-4 max-w-2xl animate-in fade-in duration-500">
-              <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-full overflow-hidden border-4 border-amber-600/70 shadow-2xl mx-auto ring-8 ring-amber-900/30">
-                <img
-                  src={assignedWake.photoUrl}
-                  alt={assignedWake.deceasedName}
-                  className="w-full h-full object-cover filter grayscale contrast-105"
-                />
+              <div className="w-40 h-40 sm:w-52 sm:h-52 rounded-full overflow-hidden border-4 border-amber-600/70 shadow-2xl mx-auto ring-8 ring-amber-900/30 bg-stone-950 flex items-center justify-center">
+                {assignedWake.photoUrl ? (
+                  <img
+                    src={assignedWake.photoUrl}
+                    alt={assignedWake.deceasedName}
+                    className="w-full h-full object-cover filter grayscale contrast-105"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-stone-900 via-stone-950 to-black text-amber-400 font-serif select-none">
+                    <span className="text-4xl sm:text-6xl font-bold tracking-wider">
+                      {assignedWake.deceasedName.split(' ').filter(Boolean).map(n => n[0]).slice(0, 2).join('').toUpperCase() || '🕊️'}
+                    </span>
+                    <span className="text-[11px] font-sans font-medium text-stone-500 tracking-widest uppercase mt-1">En Memoria</span>
+                  </div>
+                )}
               </div>
 
               <div>
-                <span className="px-4 py-1.5 rounded-full text-xs font-semibold bg-red-950/90 text-red-300 border border-red-800/70 inline-flex items-center gap-2 mb-3 shadow-md">
-                  <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                  Transmisión en Vivo a Familiares y Allegados
-                </span>
+                <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-xs font-serif text-amber-300/80 bg-stone-900/80 border border-stone-800 mb-3">
+                  <Flame className="w-3.5 h-3.5 text-amber-500 candle-flame" />
+                  <span>Homenaje y Capilla en Memoria</span>
+                </div>
 
                 <h2 className="text-3xl sm:text-5xl font-serif font-bold text-stone-50 tracking-wide">
                   {assignedWake.deceasedName}
@@ -207,6 +305,36 @@ export const TVKioskPage: React.FC = () => {
                   <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-stone-900/90 border border-stone-800 text-xs sm:text-sm text-stone-300">
                     <Clock className="w-4 h-4 text-amber-500" />
                     <span>Cortejo: {assignedWake.cortegeTime}</span>
+                  </div>
+                )}
+
+                {/* Código QR Dinámico para Compartir y Enviar Condolencias */}
+                {wakeUrl && (
+                  <div className="mt-5 mx-auto flex items-center gap-4 sm:gap-5 p-3.5 sm:p-4 px-5 sm:px-6 rounded-3xl bg-stone-900/90 border border-stone-800/90 shadow-2xl backdrop-blur-md text-left max-w-xl">
+                    <div className="p-2 sm:p-2.5 bg-white rounded-2xl shadow-md shrink-0 ring-2 ring-amber-500/30">
+                      <QRCodeSVG
+                        value={wakeUrl}
+                        size={88}
+                        level="M"
+                        bgColor="#ffffff"
+                        fgColor="#0c0a09"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-1.5 text-amber-400 text-xs sm:text-sm font-semibold tracking-wide">
+                        <QrCode className="w-4 h-4 text-amber-500" />
+                        <span>Escaneá para acompañar y compartir</span>
+                      </div>
+                      <p className="text-xs text-stone-300 leading-relaxed font-light">
+                        Enviá tus condolencias desde el celular para verlas en esta pantalla o compartí el homenaje por WhatsApp con familiares a la distancia.
+                      </p>
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="text-[11px] text-stone-500 font-mono">PIN Privado:</span>
+                        <span className="px-2.5 py-0.5 rounded-md bg-stone-950 border border-stone-750 text-amber-300 font-mono font-bold text-xs tracking-wider">
+                          {assignedWake.accessPin}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>

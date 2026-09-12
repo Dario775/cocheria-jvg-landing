@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { KeyRound, ShieldCheck, ArrowLeft, Heart, Flame, Sparkles } from 'lucide-react';
+import { KeyRound, ShieldAlert, Video, Heart, Clock, MapPin, ArrowRight, Lock } from 'lucide-react';
+import { sanitizePin } from '../utils/security';
 import { VirtualWakeRoom } from '../components/streaming/VirtualWakeRoom';
 import { useWakeServices } from '../context/WakeServicesContext';
 import { EmblemIcon } from '../components/logos/CompanyLogos';
@@ -120,11 +121,11 @@ export const VirtualWakePage: React.FC = () => {
                 type="text"
                 value={pinInput}
                 onChange={(e) => {
-                  setPinInput(e.target.value);
+                  setPinInput(sanitizePin(e.target.value, 8));
                   setPinError('');
                 }}
-                placeholder="Ej: 8492 o código de sala"
-                maxLength={10}
+                placeholder="Ej: 1234 o código de sala"
+                maxLength={8}
                 className="w-full pl-12 pr-4 py-3.5 bg-stone-950 border border-stone-700 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-2xl text-center text-lg sm:text-xl font-mono tracking-widest text-stone-100 placeholder:text-stone-600 placeholder:font-sans placeholder:text-sm placeholder:tracking-normal transition-all"
                 autoFocus
               />
