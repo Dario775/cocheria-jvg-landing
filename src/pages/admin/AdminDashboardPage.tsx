@@ -54,6 +54,8 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
     updateWakeService, 
     deleteWakeService, 
     setWakeStatus, 
+    createTVDevice,
+    deleteTVDevice,
     toggleTVMode,
     assignWakeToTV,
     approveCondolence,
@@ -66,6 +68,12 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
   const [copiedWakeId, setCopiedWakeId] = useState<string | null>(null);
   const [copiedTVCode, setCopiedTVCode] = useState<string | null>(null);
   const [notificationMsg, setNotificationMsg] = useState<string | null>(null);
+  const [showNewTVModal, setShowNewTVModal] = useState(false);
+  const [newTVData, setNewTVData] = useState({
+    deviceCode: '',
+    roomName: '',
+    branchName: 'Casa Central • Joaquín V. González'
+  });
 
   // Form State limpio sin datos de prueba harcodeados
   const initialFormData = {
@@ -260,6 +268,29 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
     setCopiedTVCode(deviceCode);
     showNotification(`Enlace para la pantalla ${deviceCode} copiado.`);
     setTimeout(() => setCopiedTVCode(null), 3000);
+  };
+
+  const handleCreateTV = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTVData.deviceCode.trim() || !newTVData.roomName.trim()) {
+      showNotification('Complete el código y el nombre de la sala.');
+      return;
+    }
+    await createTVDevice(newTVData);
+    showNotification(`Sala "${newTVData.roomName}" (${newTVData.deviceCode.toUpperCase()}) vinculada.`);
+    setNewTVData({
+      deviceCode: '',
+      roomName: '',
+      branchName: 'Casa Central • Joaquín V. González'
+    });
+    setShowNewTVModal(false);
+  };
+
+  const handleDeleteTV = async (tvCode: string, roomName: string) => {
+    if (window.confirm(`¿Está seguro de desvincular la pantalla "${roomName}" (${tvCode})?`)) {
+      await deleteTVDevice(tvCode);
+      showNotification(`Pantalla ${tvCode} eliminada.`);
+    }
   };
 
   const pendingModerationsCount = moderationQueue.filter(m => m.status === 'pendiente').length;
@@ -759,10 +790,13 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                     onChange={e => setFormData({ ...formData, chapelRoom: e.target.value })}
                     className="w-full px-4 py-3 bg-stone-950 border border-stone-700 rounded-2xl text-stone-100 text-sm"
                   >
-                    <option value="Sala Magna A">Sala Magna A (Central)</option>
-                    <option value="Sala B (Capilla Menor)">Sala B (Capilla Menor)</option>
-                    <option value="Sala Memorial Metán">Sala Memorial Metán</option>
-                    <option value="Sala Jardín Güemes">Sala Jardín Güemes</option>
+                    {tvDevices.map(tv => (
+                      <option key={tv.deviceCode} value={tv.roomName}>
+                        {tv.roomName} ({tv.deviceCode}) — {tv.branchName.split('•')[0].trim()}
+                      </option>
+                    ))}
+                    <option value="Servicio en Domicilio Particular">Servicio en Domicilio Particular</option>
+                    <option value="Capilla de la Paz">Capilla de la Paz</option>
                   </select>
                 </div>
               </div>
@@ -867,13 +901,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
         {/* ── TAB 3: CONTROL REMOTO TV BOX ── */}
         {activeTab === 'tv_kiosk' && (
           <div className="space-y-6">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
-                Control Remoto de Pantallas TV Box en Salas
-              </h2>
-              <p className="text-xs sm:text-sm text-stone-400 mt-1">
-                Conmute de manera instantánea entre el Modo Transmisión (homenaje al difunto y condolencias) y el Modo Espera (guardia institucional 24hs) para cada Smart TV.
-              </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-serif font-bold text-stone-100">
+                  Control Remoto de Pantallas TV Box en Salas
+                </h2>
+                <p className="text-xs sm:text-sm text-stone-400 mt-1">
+                  Conmute de manera instantánea entre el Modo Transmisión (homenaje al difunto y condolencias) y el Modo Espera (guardia institucional 24hs) para cada Smart TV.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowNewTVModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs sm:text-sm tracking-wide transition-all shadow-lg hover:shadow-amber-600/20 active:scale-[0.99] cursor-pointer flex-shrink-0"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Vincular Nueva Pantalla / Sala</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -898,13 +942,23 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                           </span>
                         </div>
 
-                        <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase font-mono ${
-                          isTransmitting 
-                            ? 'bg-red-600/20 text-red-400 border border-red-500/40' 
-                            : 'bg-stone-800 text-stone-400 border border-stone-700'
-                        }`}>
-                          {isTransmitting ? '🔴 Modo Transmisión' : '⚪ Modo Espera'}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase font-mono ${
+                            isTransmitting 
+                              ? 'bg-red-600/20 text-red-400 border border-red-500/40' 
+                              : 'bg-stone-800 text-stone-400 border border-stone-700'
+                          }`}>
+                            {isTransmitting ? '🔴 Modo Transmisión' : '⚪ Modo Espera'}
+                          </span>
+
+                          <button
+                            onClick={() => handleDeleteTV(tv.deviceCode, tv.roomName)}
+                            className="p-1.5 rounded-lg text-stone-500 hover:text-red-400 hover:bg-stone-800/80 transition-colors cursor-pointer"
+                            title="Eliminar pantalla"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
 
                       <h3 className="font-serif font-bold text-lg sm:text-xl text-stone-100">
@@ -1009,6 +1063,102 @@ export const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ onLogout
                 );
               })}
             </div>
+
+            {/* Modal para vincular nueva pantalla TV Box */}
+            {showNewTVModal && (
+              <div className="fixed inset-0 z-50 bg-stone-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-stone-900 border border-stone-800 rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl animate-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-amber-600/20 border border-amber-500/30 flex items-center justify-center text-amber-500">
+                        <Tv className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-serif font-bold text-lg text-stone-100">
+                          Vincular Nueva Pantalla o Sala
+                        </h3>
+                        <p className="text-xs text-stone-400">
+                          Configure una nueva Smart TV para salas velatorias.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowNewTVModal(false)}
+                      className="text-stone-500 hover:text-stone-300 p-1 cursor-pointer"
+                    >
+                      <XCircle className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleCreateTV} className="space-y-4 text-left">
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1.5">
+                        Código Identificador del TV Box
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: TV-JVG-03 o TV-MET-02"
+                        value={newTVData.deviceCode}
+                        onChange={e => setNewTVData({ ...newTVData, deviceCode: e.target.value.toUpperCase() })}
+                        className="w-full px-4 py-2.5 bg-stone-950 border border-stone-700 focus:border-amber-500 rounded-xl text-stone-100 text-sm font-mono uppercase"
+                      />
+                      <span className="text-[11px] text-stone-500 block mt-1">
+                        Se usará para la URL del navegador: <code className="text-amber-400 font-mono">/tv/{newTVData.deviceCode || 'CODIGO'}</code>
+                      </span>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1.5">
+                        Nombre de la Sala
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Sala Suite C, Sala Memorial B..."
+                        value={newTVData.roomName}
+                        onChange={e => setNewTVData({ ...newTVData, roomName: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-stone-950 border border-stone-700 focus:border-amber-500 rounded-xl text-stone-100 text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-stone-300 uppercase tracking-wider mb-1.5">
+                        Sucursal / Ubicación
+                      </label>
+                      <select
+                        value={newTVData.branchName}
+                        onChange={e => setNewTVData({ ...newTVData, branchName: e.target.value })}
+                        className="w-full px-4 py-2.5 bg-stone-950 border border-stone-700 rounded-xl text-stone-100 text-sm"
+                      >
+                        <option value="Casa Central • Joaquín V. González">Casa Central • Joaquín V. González</option>
+                        <option value="Sucursal San José de Metán">Sucursal San José de Metán</option>
+                        <option value="Sucursal General Güemes">Sucursal General Güemes</option>
+                        <option value="Sucursal El Quebrachal">Sucursal El Quebrachal</option>
+                        <option value="Sucursal Las Lajitas">Sucursal Las Lajitas</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-800">
+                      <button
+                        type="button"
+                        onClick={() => setShowNewTVModal(false)}
+                        className="px-4 py-2.5 rounded-xl border border-stone-700 text-xs font-semibold text-stone-300 hover:bg-stone-800 transition-colors cursor-pointer"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold text-xs tracking-wide transition-all shadow-md cursor-pointer"
+                      >
+                        Guardar y Registrar Pantalla
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

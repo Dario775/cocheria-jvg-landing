@@ -25,6 +25,8 @@ interface WakeServicesContextType {
   updateWakeService: (id: string, updates: Partial<WakeService>) => void;
   deleteWakeService: (id: string) => void;
   setWakeStatus: (id: string, status: 'preparacion' | 'en_vivo' | 'finalizado') => void;
+  createTVDevice: (data: { deviceCode: string; roomName: string; branchName: string }) => Promise<void>;
+  deleteTVDevice: (deviceCode: string) => Promise<void>;
   toggleTVMode: (deviceCode: string) => void;
   setTVMode: (deviceCode: string, mode: 'transmision' | 'espera') => void;
   assignWakeToTV: (deviceCode: string, wakeId: string | null) => void;
@@ -391,6 +393,46 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
     supabase.from('tv_devices').update({ assigned_wake_id: wakeId, mode }).eq('device_code', deviceCode).then(() => {}).catch(() => {});
   };
 
+  // Create TV device
+  const createTVDevice = async (data: { deviceCode: string; roomName: string; branchName: string }) => {
+    const cleanCode = data.deviceCode.trim().toUpperCase().replace(/\s+/g, '-');
+    const newTV: TVDevice = {
+      deviceCode: cleanCode,
+      roomName: data.roomName.trim(),
+      branchName: data.branchName.trim(),
+      assignedWakeId: null,
+      mode: 'espera',
+      isOnline: true,
+      lastSeen: 'En línea ahora'
+    };
+
+    setTvDevices(prev => [...prev.filter(t => t.deviceCode !== cleanCode), newTV]);
+
+    try {
+      await supabase.from('tv_devices').upsert({
+        device_code: newTV.deviceCode,
+        room_name: newTV.roomName,
+        branch_name: newTV.branchName,
+        assigned_wake_id: null,
+        mode: 'espera',
+        is_online: true
+      });
+    } catch (e) {
+      console.error('Error al guardar nueva sala TV en Supabase:', e);
+    }
+  };
+
+  // Delete TV device
+  const deleteTVDevice = async (deviceCode: string) => {
+    const cleanCode = deviceCode.trim().toUpperCase();
+    setTvDevices(prev => prev.filter(t => t.deviceCode.toUpperCase() !== cleanCode));
+    try {
+      await supabase.from('tv_devices').delete().eq('device_code', cleanCode);
+    } catch (e) {
+      console.error('Error al eliminar sala TV en Supabase:', e);
+    }
+  };
+
   // Query helpers
   const getWakeById = (id: string) => wakeServices.find(s => s.id === id);
 
@@ -478,6 +520,8 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
         updateWakeService,
         deleteWakeService,
         setWakeStatus,
+        createTVDevice,
+        deleteTVDevice,
         toggleTVMode,
         setTVMode,
         assignWakeToTV,
