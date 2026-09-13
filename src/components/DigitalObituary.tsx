@@ -13,6 +13,15 @@ interface DigitalObituaryProps {
   onAddTribute: (obituaryId: string, tribute: Omit<MemorialTribute, 'id' | 'timestamp'>) => void;
 }
 
+const getInitials = (name: string): string => {
+  if (!name) return '•';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const filtered = parts.filter(p => !/^(don|doña|sr|sra|dr|dra|prof)\.?$/i.test(p));
+  const target = filtered.length > 0 ? filtered : parts;
+  if (target.length === 1) return target[0].charAt(0).toUpperCase();
+  return (target[0].charAt(0) + target[target.length - 1].charAt(0)).toUpperCase();
+};
+
 export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
   obituaries,
   onLightCandle,
@@ -21,7 +30,7 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
 }) => {
   const { isDark } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'en_velacion' | 'inhumado' | 'cremado'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'en_velacion' | 'inhumado'>('all');
   const [selectedObituary, setSelectedObituary] = useState<Obituary | null>(null);
 
   const filteredObituaries = useMemo(() => {
@@ -42,6 +51,7 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
   }, [obituaries, selectedObituary]);
 
   const activeCount = obituaries.filter(o => o.status === 'en_velacion').length;
+  const concludedCount = obituaries.filter(o => o.status === 'inhumado').length;
 
   return (
     <section id="obituario" className={`py-16 sm:py-20 ${
@@ -118,7 +128,7 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-600"></span>
                 </span>
-                En Velación ({activeCount})
+                En Sala de Velación ({activeCount})
               </button>
 
               <button
@@ -129,18 +139,7 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
                     : isDark ? 'bg-stone-800 text-stone-300 hover:bg-stone-750' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                 }`}
               >
-                Inhumaciones
-              </button>
-
-              <button
-                onClick={() => setStatusFilter('cremado')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  statusFilter === 'cremado'
-                    ? 'bg-amber-700 text-white font-semibold shadow-md'
-                    : isDark ? 'bg-stone-800 text-stone-300 hover:bg-stone-750' : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
-                }`}
-              >
-                Cremaciones
+                Descanso Eterno ({concludedCount})
               </button>
             </div>
 
@@ -148,10 +147,30 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
         </div>
 
         {/* Obituaries Grid */}
-        {filteredObituaries.length === 0 ? (
+        {obituaries.length === 0 ? (
+          <div className={`${isDark ? 'bg-stone-850/80 border-stone-800' : 'bg-white border-stone-200 shadow-xs'} border rounded-2xl p-10 sm:p-14 text-center max-w-xl mx-auto space-y-4`}>
+            <div className={`w-14 h-14 rounded-full mx-auto flex items-center justify-center ${isDark ? 'bg-stone-800 text-amber-400/80' : 'bg-amber-50 text-amber-800'}`}>
+              <Flame className="w-7 h-7 candle-flame" />
+            </div>
+            <div className="space-y-1.5">
+              <h3 className={`text-lg font-serif font-bold ${isDark ? 'text-stone-100' : 'text-stone-900'}`}>
+                No hay salas de velación con servicios activos en este momento
+              </h3>
+              <p className={`text-xs sm:text-sm ${isDark ? 'text-stone-400' : 'text-stone-600'} leading-relaxed`}>
+                Nuestras capillas e instalaciones se encuentran en apresto y guardia permanente. Para coordinar un servicio o consultar información de decesos recientes, comuníquese con nuestra guardia 24 horas.
+              </p>
+            </div>
+            <a
+              href="tel:+5493877401234"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-stone-950 font-semibold text-xs transition-colors shadow-xs"
+            >
+              Guardia Telefónica 24hs: 3877-401234
+            </a>
+          </div>
+        ) : filteredObituaries.length === 0 ? (
           <div className={`${isDark ? 'bg-stone-850 border-stone-800' : 'bg-white border-stone-200 shadow-sm'} border rounded-2xl p-10 text-center space-y-3`}>
             <p className={`${isDark ? 'text-stone-400' : 'text-stone-600'} text-sm`}>
-              No se encontraron registros de homenajes para la búsqueda "{searchQuery}".
+              No se encontraron registros de homenajes para la búsqueda seleccionada.
             </p>
             <button
               onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
@@ -214,16 +233,33 @@ export const DigitalObituary: React.FC<DigitalObituaryProps> = ({
                   {/* Card Main Body */}
                   <div className="p-5 space-y-4">
                     <div className="flex items-start gap-4">
-                      {/* Photo */}
+                      {/* Photo or Dignified Monogram Avatar */}
                       <div className={`w-16 h-16 sm:w-18 sm:h-18 rounded-full overflow-hidden border-2 ${
                         isDark ? 'border-amber-700/50 bg-stone-800' : 'border-amber-600/40 bg-stone-100'
-                      } flex-shrink-0 shadow-md`}>
-                        <img
-                          src={obit.photoUrl}
-                          alt={obit.fullName}
-                          className="w-full h-full object-cover filter grayscale contrast-105 group-hover:scale-105 transition-transform duration-300"
-                          referrerPolicy="no-referrer"
-                        />
+                      } flex-shrink-0 shadow-md relative flex items-center justify-center`}>
+                        {obit.photoUrl ? (
+                          <img
+                            src={obit.photoUrl}
+                            alt={obit.fullName}
+                            className="w-full h-full object-cover filter grayscale contrast-105 group-hover:scale-105 transition-transform duration-300"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              (e.currentTarget as HTMLElement).style.display = 'none';
+                              const fallback = e.currentTarget.parentElement?.querySelector('.monogram-fallback') as HTMLElement;
+                              if (fallback) fallback.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`monogram-fallback w-full h-full flex flex-col items-center justify-center ${
+                            isDark 
+                              ? 'bg-gradient-to-b from-stone-800 to-stone-900 text-amber-300' 
+                              : 'bg-gradient-to-b from-stone-100 to-amber-100/70 text-amber-900'
+                          } font-serif font-bold text-sm sm:text-base select-none`}
+                          style={{ display: obit.photoUrl ? 'none' : 'flex' }}
+                        >
+                          <span>{getInitials(obit.fullName)}</span>
+                        </div>
                       </div>
 
                       {/* Name & Epitaph */}

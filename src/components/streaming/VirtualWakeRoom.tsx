@@ -24,6 +24,15 @@ import { useWakeServices } from '../../context/WakeServicesContext';
 import { FloatingCandleEmbers } from '../effects/FloatingCandleEmbers';
 import { sanitizeText, sanitizePin } from '../../utils/security';
 
+const getInitials = (name: string): string => {
+  if (!name) return '•';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const filtered = parts.filter(p => !/^(don|doña|sr|sra|dr|dra|prof)\.?$/i.test(p));
+  const target = filtered.length > 0 ? filtered : parts;
+  if (target.length === 1) return target[0].charAt(0).toUpperCase();
+  return (target[0].charAt(0) + target[target.length - 1].charAt(0)).toUpperCase();
+};
+
 interface LiveCondolenceItem {
   id: string;
   senderName: string;
@@ -483,12 +492,25 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 <div className="relative z-10 space-y-5 max-w-md w-full">
                   {/* Memorial photo */}
                   <div className="relative mx-auto w-24 h-24 sm:w-28 sm:h-28">
-                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-amber-600/50 shadow-2xl relative z-10">
-                      <img
-                        src={serviceData.photoUrl}
-                        alt={serviceData.deceasedName}
-                        className="w-full h-full object-cover filter grayscale contrast-105"
-                      />
+                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-amber-600/50 shadow-2xl relative z-10 flex items-center justify-center bg-stone-900">
+                      {serviceData.photoUrl ? (
+                        <img
+                          src={serviceData.photoUrl}
+                          alt={serviceData.deceasedName}
+                          className="w-full h-full object-cover filter grayscale contrast-105"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                            const fallback = e.currentTarget.parentElement?.querySelector('.vroom-monogram-loading') as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="vroom-monogram-loading w-full h-full rounded-full flex items-center justify-center bg-gradient-to-b from-stone-800 to-stone-950 text-amber-300 font-serif font-bold text-2xl select-none"
+                        style={{ display: serviceData.photoUrl ? 'none' : 'flex' }}
+                      >
+                        <span>{getInitials(serviceData.deceasedName)}</span>
+                      </div>
                     </div>
                     <div className="absolute -bottom-1 -right-1 z-20 w-8 h-8 rounded-full bg-stone-900 border border-amber-500/50 flex items-center justify-center text-amber-500 shadow-lg">
                       <Flame className="w-4 h-4 animate-pulse" />
@@ -614,8 +636,25 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
                 /* Fallback Simulated Altar */
                 <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
                   <div className="relative z-10 space-y-3 max-w-sm">
-                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-600/50 shadow-xl mx-auto">
-                      <img src={serviceData.photoUrl} alt={serviceData.deceasedName} className="w-full h-full object-cover filter grayscale" />
+                    <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-amber-600/50 shadow-xl mx-auto flex items-center justify-center bg-stone-900">
+                      {serviceData.photoUrl ? (
+                        <img 
+                          src={serviceData.photoUrl} 
+                          alt={serviceData.deceasedName} 
+                          className="w-full h-full object-cover filter grayscale" 
+                          onError={(e) => {
+                            (e.currentTarget as HTMLElement).style.display = 'none';
+                            const fallback = e.currentTarget.parentElement?.querySelector('.vroom-monogram-altar') as HTMLElement;
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div
+                        className="vroom-monogram-altar w-full h-full rounded-full flex items-center justify-center bg-gradient-to-b from-stone-800 to-stone-950 text-amber-300 font-serif font-bold text-xl select-none"
+                        style={{ display: serviceData.photoUrl ? 'none' : 'flex' }}
+                      >
+                        <span>{getInitials(serviceData.deceasedName)}</span>
+                      </div>
                     </div>
                     <div>
                       <h4 className="text-white font-serif font-bold text-base">{serviceData.deceasedName}</h4>
@@ -630,12 +669,25 @@ export const VirtualWakeRoom: React.FC<VirtualWakeRoomProps> = ({
             {/* Ficha Institucional Compacta en Barra Horizontal (Visibilidad directa SIN scroll) */}
             <div className="h-18 sm:h-20 flex-shrink-0 bg-stone-900 border-t border-stone-800 px-4 sm:px-6 py-2 flex items-center justify-between gap-4 select-none">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-amber-500/60 shadow-sm flex-shrink-0">
-                  <img
-                    src={serviceData.photoUrl}
-                    alt={serviceData.deceasedName}
-                    className="w-full h-full object-cover filter grayscale contrast-105"
-                  />
+                <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-amber-500/60 shadow-sm flex-shrink-0 flex items-center justify-center bg-stone-900">
+                  {serviceData.photoUrl ? (
+                    <img
+                      src={serviceData.photoUrl}
+                      alt={serviceData.deceasedName}
+                      className="w-full h-full object-cover filter grayscale contrast-105"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLElement).style.display = 'none';
+                        const fallback = e.currentTarget.parentElement?.querySelector('.vroom-monogram-bar') as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div
+                    className="vroom-monogram-bar w-full h-full rounded-full flex items-center justify-center bg-gradient-to-b from-stone-800 to-stone-950 text-amber-300 font-serif font-bold text-xs select-none"
+                    style={{ display: serviceData.photoUrl ? 'none' : 'flex' }}
+                  >
+                    <span>{getInitials(serviceData.deceasedName)}</span>
+                  </div>
                 </div>
                 <div className="min-w-0">
                   <h3 className="font-serif font-bold text-sm sm:text-base text-stone-100 truncate">

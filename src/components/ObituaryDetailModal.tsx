@@ -14,6 +14,15 @@ interface ObituaryDetailModalProps {
   onAddTribute: (obituaryId: string, tribute: Omit<MemorialTribute, 'id' | 'timestamp'>) => void;
 }
 
+const getInitials = (name: string): string => {
+  if (!name) return '•';
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  const filtered = parts.filter(p => !/^(don|doña|sr|sra|dr|dra|prof)\.?$/i.test(p));
+  const target = filtered.length > 0 ? filtered : parts;
+  if (target.length === 1) return target[0].charAt(0).toUpperCase();
+  return (target[0].charAt(0) + target[target.length - 1].charAt(0)).toUpperCase();
+};
+
 export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
   obituary,
   onClose,
@@ -170,13 +179,30 @@ export const ObituaryDetailModal: React.FC<ObituaryDetailModalProps> = ({
             <div className="relative flex-shrink-0 text-center">
               <div className={`w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden border-4 ${
                 isDark ? 'border-amber-700/60 bg-stone-800' : 'border-amber-600/40 bg-stone-100'
-              } shadow-xl mx-auto p-1`}>
-                <img
-                  src={obituary.photoUrl}
-                  alt={obituary.fullName}
-                  className="w-full h-full object-cover rounded-full filter grayscale contrast-105"
-                  referrerPolicy="no-referrer"
-                />
+              } shadow-xl mx-auto p-1 relative flex items-center justify-center`}>
+                {obituary.photoUrl ? (
+                  <img
+                    src={obituary.photoUrl}
+                    alt={obituary.fullName}
+                    className="w-full h-full object-cover rounded-full filter grayscale contrast-105"
+                    referrerPolicy="no-referrer"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = 'none';
+                      const fallback = e.currentTarget.parentElement?.querySelector('.modal-monogram-fallback') as HTMLElement;
+                      if (fallback) fallback.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div
+                  className={`modal-monogram-fallback w-full h-full rounded-full flex flex-col items-center justify-center ${
+                    isDark 
+                      ? 'bg-gradient-to-b from-stone-800 to-stone-900 text-amber-300' 
+                      : 'bg-gradient-to-b from-stone-100 to-amber-100/70 text-amber-900'
+                  } font-serif font-bold text-3xl sm:text-4xl select-none`}
+                  style={{ display: obituary.photoUrl ? 'none' : 'flex' }}
+                >
+                  <span>{getInitials(obituary.fullName)}</span>
+                </div>
               </div>
 
               {/* Candles summary badge */}

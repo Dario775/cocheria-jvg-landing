@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { OBITUARIES_DATA } from '../data/mockData';
 import { Obituary, CondolenceMessage, MemorialTribute, WakeService } from '../types';
 import { Navbar } from '../components/Navbar';
 import { Hero } from '../components/Hero';
@@ -43,6 +42,11 @@ const mapWakeToObituary = (wake: WakeService, moderation: any[] = []): Obituary 
       timestamp: m.timestamp
     }));
 
+  const totalCandles = Math.max(
+    wake.candlesCount || 0,
+    wakeApprovedCondolences.filter(c => c.candleLit).length
+  );
+
   return {
     id: wake.id,
     fullName: wake.deceasedName,
@@ -65,7 +69,7 @@ const mapWakeToObituary = (wake: WakeService, moderation: any[] = []): Obituary 
       cemeteryOrCrematory: 'Cementerio Parque de la Paz',
       locationAddress: wake.branchName
     },
-    candlesCount: (wake.candlesCount || 0) + wakeApprovedCondolences.filter(c => c.candleLit).length,
+    candlesCount: totalCandles,
     condolences: wakeApprovedCondolences,
     tributes: wakeApprovedTributes
   };
@@ -79,152 +83,64 @@ export const LandingHomePage: React.FC = () => {
   const [fontSize, setFontSize] = useState<'normal' | 'large' | 'xlarge'>('normal');
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  // Initialize base obituaries with local storage caching for tributes and candles
-  const [obituaries, setObituaries] = useState<Obituary[]>(() => {
-    try {
-      const saved = localStorage.getItem('cocheria_jvg_obituaries');
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch (e) {
-      console.error('Failed to load cached obituaries', e);
-    }
-    return OBITUARIES_DATA;
-  });
-
-  // Save obituaries whenever updated
+  // Limpiar cualquier residuo de datos mock previamente cacheados en localStorage
   useEffect(() => {
     try {
-      localStorage.setItem('cocheria_jvg_obituaries', JSON.stringify(obituaries));
+      localStorage.removeItem('cocheria_jvg_obituaries');
     } catch (e) {
-      console.error('Failed to save obituaries', e);
+      console.warn('Error al limpiar caché local de obituarios', e);
     }
-  }, [obituaries]);
+  }, []);
 
-  // Combinación en tiempo real: Velatorios de Supabase + Archivo histórico
+  // Obituarios 100% dinámicos en tiempo real desde Supabase (wake_services + wake_condolences)
   const dynamicObituaries = useMemo(() => {
-    const realObits = wakeServices.map(w => mapWakeToObituary(w, moderationQueue));
-    const realNames = new Set(realObits.map(r => r.fullName.trim().toLowerCase()));
-    const nonDuplicatedBase = obituaries.filter(b => 
-      !realNames.has(b.fullName.trim().toLowerCase()) && !realObits.some(r => r.id === b.id)
-    );
-    return [...realObits, ...nonDuplicatedBase];
-  }, [wakeServices, moderationQueue, obituaries]);
+    return wakeServices.map(w => mapWakeToObituary(w, moderationQueue));
+  }, [wakeServices, moderationQueue]);
 
-  // Handle candle lighting (sincronizado con Supabase si corresponde)
+  // Handle candle lighting (sincronizado directamente con Supabase)
   const handleLightCandle = (obituaryId: string, authorName = 'Un allegado') => {
-    if (wakeServices.some(w => w.id === obituaryId)) {
-      lightWakeCandle(obituaryId);
-      addCondolenceToQueue({
-        wakeId: obituaryId,
-        senderName: authorName,
-        senderCity: 'Comunidad',
-        message: '🕯️ Ha encendido una vela en memoria del homenajeado.',
-        tributeType: 'candle'
-      });
-      return;
-    }
-
-    setObituaries(prev => prev.map(item => {
-      if (item.id === obituaryId) {
-        const newTribute: MemorialTribute = {
-          id: `t-${Date.now()}`,
-          type: 'candle',
-          author: authorName,
-          timestamp: 'Recientemente'
-        };
-        return {
-          ...item,
-          candlesCount: item.candlesCount + 1,
-          tributes: [newTribute, ...item.tributes]
-        };
-      }
-      return item;
-    }));
+    lightWakeCandle(obituaryId);
+    addCondolenceToQueue({
+      wakeId: obituaryId,
+      senderName: authorName,
+      senderCity: 'Comunidad',
+      message: '🕯️ Ha encendido una vela en memoria del homenajeado.',
+      tributeType: 'candle'
+    });
   };
 
-  // Handle adding condolence (sincronizado con Supabase si corresponde)
+  // Handle adding condolence (sincronizado directamente con Supabase)
   const handleAddCondolence = (obituaryId: string, condolence: Omit<CondolenceMessage, 'id' | 'timestamp'>) => {
-    if (wakeServices.some(w => w.id === obituaryId)) {
-      addCondolenceToQueue({
-        wakeId: obituaryId,
-        senderName: condolence.author,
-        senderCity: condolence.relationship || 'Comunidad',
-        message: condolence.message,
-        tributeType: condolence.candleLit ? 'candle' : 'prayer'
-      });
-      if (condolence.candleLit) {
-        lightWakeCandle(obituaryId);
-      }
-      return;
+    addCondolenceToQueue({
+      wakeId: obituaryId,
+      senderName: condolence.author,
+      senderCity: condolence.relationship || 'Comunidad',
+      message: condolence.message,
+      tributeType: condolence.candleLit ? 'candle' : 'prayer'
+    });
+    if (condolence.candleLit) {
+      lightWakeCandle(obituaryId);
     }
-
-    setObituaries(prev => prev.map(item => {
-      if (item.id === obituaryId) {
-        const newEntry: CondolenceMessage = {
-          id: `c-${Date.now()}`,
-          ...condolence,
-          timestamp: 'Hace un momento'
-        };
-
-        const updatedCandles = condolence.candleLit ? item.candlesCount + 1 : item.candlesCount;
-        const updatedTributes = condolence.candleLit ? [
-          {
-            id: `t-${Date.now()}`,
-            type: 'candle' as const,
-            author: condolence.author,
-            timestamp: 'Hace un momento'
-          },
-          ...item.tributes
-        ] : item.tributes;
-
-        return {
-          ...item,
-          candlesCount: updatedCandles,
-          condolences: [newEntry, ...item.condolences],
-          tributes: updatedTributes
-        };
-      }
-      return item;
-    }));
   };
 
-  // Handle adding symbolic tribute (flower, prayer, heart)
+  // Handle adding symbolic tribute (flower, prayer, heart - sincronizado con Supabase)
   const handleAddTribute = (obituaryId: string, tribute: Omit<MemorialTribute, 'id' | 'timestamp'>) => {
-    if (wakeServices.some(w => w.id === obituaryId)) {
-      const typeLabels: Record<string, string> = {
-        candle: '🕯️ Encendió una vela en su memoria',
-        flower: '🌸 Ofrendó flores en su memoria',
-        prayer: '🙏 Elevó una oración por su eterno descanso',
-        heart: '❤️ Envió un homenaje de cariño'
-      };
-      addCondolenceToQueue({
-        wakeId: obituaryId,
-        senderName: tribute.author,
-        senderCity: 'Comunidad',
-        message: typeLabels[tribute.type] || 'Ofrendó un tributo conmemorativo',
-        tributeType: tribute.type
-      });
-      if (tribute.type === 'candle') {
-        lightWakeCandle(obituaryId);
-      }
-      return;
+    const typeLabels: Record<string, string> = {
+      candle: '🕯️ Encendió una vela en su memoria',
+      flower: '🌸 Ofrendó flores en su memoria',
+      prayer: '🙏 Elevó una oración por su eterno descanso',
+      heart: '❤️ Envió un homenaje de cariño'
+    };
+    addCondolenceToQueue({
+      wakeId: obituaryId,
+      senderName: tribute.author,
+      senderCity: 'Comunidad',
+      message: typeLabels[tribute.type] || 'Ofrendó un tributo conmemorativo',
+      tributeType: tribute.type
+    });
+    if (tribute.type === 'candle') {
+      lightWakeCandle(obituaryId);
     }
-
-    setObituaries(prev => prev.map(item => {
-      if (item.id === obituaryId) {
-        const newTribute: MemorialTribute = {
-          id: `t-${Date.now()}`,
-          ...tribute,
-          timestamp: 'Hace un momento'
-        };
-        return {
-          ...item,
-          tributes: [newTribute, ...item.tributes]
-        };
-      }
-      return item;
-    }));
   };
 
   // Smooth navigation handler

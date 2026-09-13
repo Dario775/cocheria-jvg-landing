@@ -1,0 +1,8 @@
+# Robots.txt - Cochería J.V. González
+# https://www.cocheriajvgonzales.com.ar
+
+User-agent: *
+Allow: /
+Disallow: /admin/
+
+Sitemap: https://www.cocheriajvgonzales.com.ar/sitemap.xml

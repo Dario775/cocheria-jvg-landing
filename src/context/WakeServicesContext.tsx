@@ -46,6 +46,29 @@ const STORAGE_KEY_SERVICES = 'cocheria_wake_services_v1';
 const STORAGE_KEY_TVS = 'cocheria_tv_devices_v1';
 const STORAGE_KEY_MODERATION = 'cocheria_moderation_queue_v1';
 
+const formatCondolenceTime = (dateStr?: string): string => {
+  if (!dateStr) return 'Reciente';
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Reciente';
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffMinutes < 2) return 'Hace un momento';
+  if (diffMinutes < 60) return `Hace ${diffMinutes} min`;
+  if (diffHours < 24 && date.getDate() === now.getDate()) {
+    return `Hoy ${date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`;
+  }
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth()) {
+    return `Ayer ${date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`;
+  }
+  return `${date.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' })} ${date.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })} hs`;
+};
+
 export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [wakeServices, setWakeServices] = useState<WakeService[]>(() => {
     try {
@@ -177,7 +200,7 @@ export const WakeServicesProvider: React.FC<{ children: React.ReactNode }> = ({ 
           message: c.message,
           tributeType: c.tribute_type || 'candle',
           status: c.status || 'aprobado',
-          timestamp: new Date(c.created_at).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })
+          timestamp: formatCondolenceTime(c.created_at)
         }));
         setModerationQueue(mappedCondolences);
       }
