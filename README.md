@@ -1,7 +1,7 @@
 # Cochería J.V. González — Portal Institucional & Velatorios Online
 
-[![Producción Vercel](https://img.shields.io/badge/Vercel-Producción-black?style=flat&logo=vercel)](https://www.cocheriajvgonzales.com.ar)
-[![Dominio Oficial](https://img.shields.io/badge/Dominio-www.cocheriajvgonzales.com.ar-gold?style=flat)](https://www.cocheriajvgonzales.com.ar)
+[![Producción Vercel](https://img.shields.io/badge/Vercel-Producción-black?style=flat&logo=vercel)](https://www.cocheriajvgonzalez.com.ar)
+[![Dominio Oficial](https://img.shields.io/badge/Dominio-www.cocheriajvgonzalez.com.ar-gold?style=flat)](https://www.cocheriajvgonzalez.com.ar)
 [![React](https://img.shields.io/badge/React-18.x-61dafb?style=flat&logo=react)](https://reactjs.org/)
 [![Vite](https://img.shields.io/badge/Vite-6.x-646cff?style=flat&logo=vite)](https://vitejs.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178c6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
@@ -9,7 +9,7 @@
 
 Portal web oficial y plataforma interactiva de servicios fúnebres de **Cochería J.V. González**, empresa líder en servicios exequiales, salas velatorias climatizadas, traslados nacionales y acompañamiento integral a las familias en **Joaquín V. González**, **San José de Metán**, **General Güemes** y todo el Departamento de Anta, Salta.
 
-🌐 **Sitio Web Oficial en Producción:** [https://www.cocheriajvgonzales.com.ar](https://www.cocheriajvgonzales.com.ar)
+🌐 **Sitio Web Oficial en Producción:** [https://www.cocheriajvgonzalez.com.ar](https://www.cocheriajvgonzalez.com.ar)
 
 ---
 
@@ -112,14 +112,14 @@ Copie `.env.example` a `.env.local` y complete los valores:
 
 ```bash
 # Dominio de Producción en Vercel
-VITE_APP_URL="https://www.cocheriajvgonzales.com.ar"
+VITE_APP_URL="https://www.cocheriajvgonzalez.com.ar"
 
 # Conexión a Supabase (Portal de Velatorios & Realtime)
 VITE_SUPABASE_URL="https://pbrivnpozzqjyskfimje.supabase.co"
 VITE_SUPABASE_ANON_KEY="tu_clave_publica_anon"
 
 # URL de acceso al sistema CRM / Afiliados
-VITE_CRM_URL="https://crm.cocheriajvgonzales.com.ar"
+VITE_CRM_URL="https://crm.cocheriajvgonzalez.com.ar"
 
 # Opcional: Gemini API Key para asistencia inteligente
 GEMINI_API_KEY=""
@@ -164,8 +164,8 @@ El proyecto está optimizado para su despliegue continuo en **Vercel** conectado
 2. **Variables de Entorno:**
    Configurar en el panel de Vercel (`Project Settings > Environment Variables`) las variables `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` y `VITE_APP_URL`.
 3. **Dominio Personalizado:**
-   - Dominio principal: `www.cocheriajvgonzales.com.ar`
-   - Redirección automática de `cocheriajvgonzales.com.ar` hacia `www.cocheriajvgonzales.com.ar`.
+   - Dominio principal: `www.cocheriajvgonzalez.com.ar`
+   - Redirección automática de `cocheriajvgonzalez.com.ar` hacia `www.cocheriajvgonzalez.com.ar`.
    - Certificado SSL automático emitido por Vercel.
 
 ---
